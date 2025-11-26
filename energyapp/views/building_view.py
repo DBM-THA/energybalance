@@ -1,0 +1,1 @@
+def placeholder(request): pass
