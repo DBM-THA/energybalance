@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block body_class %}calculator-page{% endblock %}
+
+{% block extra_head %}
+<style>
+
+    /* Abstand zwischen Buttons und Tabelle */
+    .button-row {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-header-title">Gespeicherte Gebäude</h1>
+        <p class="page-header-subtitle">
+            Übersicht aller berechneten Gebäude mit Export- und Löschfunktionen.
+        </p>
+    </div>
+</div>
+
+<!-- BUTTONS OBEN – gleiche Größe, saubere Abstände -->
+<div class="mb-3 building-list-buttons">
+    <a href="{% url 'building_create' %}"
+       class="btn btn-primary header-btn">
+        Neues Gebäude anlegen
+    </a>
+
+    <a href="{% url 'building_export_csv' %}"
+       class="btn btn-secondary header-btn">
+        als CSV herunterladen
+    </a>
+
+    <a href="{% url 'building_export_xlsx' %}"
+       class="btn btn-secondary header-btn">
+        als Excel herunterladen
+    </a>
+
+    <a href="{% url 'building_export_pdf' %}"
+       class="btn btn-secondary header-btn">
+        als PDF herunterladen
+    </a>
+
+    <form method="post"
+          action="{% url 'building_delete_all' %}"
+          onsubmit="return confirm('Wirklich ALLE Gebäude löschen? Dieser Vorgang kann nicht rückgängig gemacht werden!');">
+        {% csrf_token %}
+        <button class="btn btn-danger header-btn">
+            Alle löschen
+        </button>
+    </form>
+</div>
+
+<!-- TABELLE -->
+<div class="page-building-list">
+    <div class="container my-4">
+        <table id="building-table" class="table table-striped table-sm align-middle">
+            <thead class="align-middle">
+                <tr>
+                    <th style="width: 200px;">
+                        <a href="?order={% if current_order == 'name' %}name_desc{% else %}name{% endif %}"
+                           class="text-decoration-none">
+                            Name
+                            {% if current_order == 'name' %}▲{% elif current_order == 'name_desc' %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <th style="width: 120px;" class="text-center">
+                        <a href="?order={% if current_order == 'area' %}area_desc{% else %}area{% endif %}"
+                           class="text-decoration-none">
+                            Grundfläche<br><small>[m²]</small>
+                            {% if current_order == 'area' %}▲{% elif current_order == 'area_desc' %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <th style="width: 120px;" class="text-center">
+                        <a href="?order={% if current_order == 'q_h' %}q_h_desc{% else %}q_h{% endif %}"
+                           class="text-decoration-none">
+                            Q<sub>h</sub><br><small>[kWh/a]</small>
+                            {% if current_order == 'q_h' %}▲{% elif current_order == 'q_h_desc' %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <th style="width: 140px;" class="text-center">
+                        PV Eigenverb.<br><small>[kWh/a]</small>
+                    </th>
+
+                    <th style="width: 140px;" class="text-center">
+                        PV Überschuss<br><small>[kWh/a]</small>
+                    </th>
+
+                    <th style="width: 180px;" class="text-center">
+                        Aktionen
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for b in buildings %}
+                <tr>
+                    <!-- Name linksbündig lassen -->
+                    <td>{{ b.name }}</td>
+
+                    <!-- alle Zahlen zentrieren -->
+                    <td class="text-center">
+                        {{ b.result_floor_area|default:"-"|floatformat:1 }}
+                    </td>
+                    <td class="text-center">
+                        {{ b.result_Q_h|default:"-"|floatformat:0 }}
+                    </td>
+                    <td class="text-center">
+                        {{ b.result_Q_PV_on|default:"-"|floatformat:0 }}
+                    </td>
+                    <td class="text-center">
+                        {{ b.result_Q_PV_off|default:"-"|floatformat:0 }}
+                    </td>
+
+                    <!-- Aktionen: Buttons in einer Reihe mittig -->
+                    <td class="text-center action-buttons">
+                        <a class="btn btn-outline-primary btn-sm btn-details"
+                           href="{% url 'building_detail' b.pk %}">Details</a>
+
+                        <a class="btn btn-secondary btn-sm btn-edit"
+                           href="{% url 'building_edit' b.pk %}">Bearbeiten</a>
+
+                        <form method="post"
+                              style="display:inline-block; margin:0;"
+                              action="{% url 'building_delete' b.pk %}"
+                              onsubmit="return confirm('Gebäude wirklich löschen?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger">Löschen</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Noch keine Gebäude gespeichert.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
