@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'energy',
+    'energyapp',
 ]
 
 MIDDLEWARE = [
@@ -107,7 +107,7 @@ STATIC_URL = 'static/'
 
 
 STATICFILES_DIRS = [
-    BASE_DIR / "energy" / "static",
+    BASE_DIR / "energyapp" / "static",
 ]
 
 # Default primary key field type
