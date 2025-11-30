@@ -4,11 +4,10 @@ from io import BytesIO
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from .forms import BuildingForm
-from .calc import calc_heating_demand
+from energyapp.logic.building import calc_heating_demand
 from .models import Building
 from openpyxl import Workbook
 from openpyxl.styles import Font
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer

@@ -1,6 +1,8 @@
 from django.db import models
 
-
+# ============================
+# GROUP 1: Building Data
+# ============================
 class Building(models.Model):
     name = models.CharField(max_length=100)
 
@@ -83,3 +85,32 @@ class Building(models.Model):
 
     def __str__(self):
         return self.name
+
+
+# ============================
+# GROUP 2: Envelope Components
+# ============================
+
+# ============================
+# GROUP 3: Internal Gains
+# ============================
+
+# ============================
+# GROUP 4: Ventilation
+# ============================
+
+# ============================
+# GROUP 5: Lighting & Water
+# ============================
+
+# ============================
+# GROUP 6: PV
+# ============================
+
+# ============================
+# GROUP 7: GWP
+# ============================
+
+# ============================
+# GROUP 8: Load Profile
+# ============================

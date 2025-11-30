@@ -1,4 +1,4 @@
-from .models import Building
+from energyapp.models import Building
 
 
 def calc_heating_demand(building: Building) -> dict:
