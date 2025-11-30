@@ -24,7 +24,7 @@ def dashboard(request):
     last_building = Building.objects.order_by("-id").first()
     return render(
         request,
-        "energy/dashboard.html",
+        "energyapp/dashboard.html",
         {
             "building_count": building_count,
             "last_building": last_building,
@@ -79,7 +79,7 @@ def building_create(request):
         "form": form,
         "result": result,
     }
-    return render(request, "energy/building_form.html", {"form": form, "result": result})
+    return render(request, "energyapp/building_form.html", {"form": form, "result": result})
 
 
 def building_list(request):
@@ -101,7 +101,7 @@ def building_list(request):
         "buildings": buildings,
         "current_order": order,
     }
-    return render(request, "energy/building_list.html", context)
+    return render(request, "energyapp/building_list.html", context)
 
 
 def building_delete(request, pk):
@@ -162,7 +162,7 @@ def building_edit(request, pk):
 
     return render(
         request,
-        "energy/building_form.html",
+        "energyapp/building_form.html",
         {"form": form, "edit_mode": True, "building": building},
     )
 
@@ -487,4 +487,4 @@ def building_detail(request, pk):
     (Template verwenden wir später, wenn du soweit bist.)
     """
     building = get_object_or_404(Building, pk=pk)
-    return render(request, "energy/building_detail.html", {"building": building})
+    return render(request, "energyapp/building_detail.html", {"building": building})
