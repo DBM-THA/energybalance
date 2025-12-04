@@ -1,0 +1,400 @@
+/* ================================
+   Dark Mode – Tabellenfix
+   ================================ */
+
+body.dark-mode #building-table,
+body.dark-mode #building-table * {
+    background-color: #181818 !important;
+    color: #f5f7ff !important;
+    border-color: #333 !important;
+}
+
+/* Kopfzeile der Tabelle im Dark Mode */
+body.dark-mode #building-table thead th {
+    background-color: #262c38 !important;
+    color: #ffffff !important;
+}
+
+/* ================================
+   Dark Mode – Buttons (nur Farben!)
+   ================================ */
+
+/* Basis: Button-Farben im Dark Mode, aber KEINE Größe ändern */
+body.dark-mode .btn {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Details (Outline-Primary) */
+body.dark-mode .btn-outline-primary,
+body.dark-mode .btn-outline-primary:focus {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-color: transparent !important;
+}
+
+body.dark-mode .btn-outline-primary:hover {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+    border-color: #0b5ed7 !important;
+}
+
+/* Bearbeiten (Secondary) */
+body.dark-mode .btn-secondary,
+body.dark-mode .btn-secondary:focus {
+    color: #ffffff !important;
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background-color: #5c636a !important;
+    border-color: #565e64 !important;
+}
+
+/* Löschen (Danger) */
+body.dark-mode .btn-danger,
+body.dark-mode .btn-danger:focus {
+    color: #ffffff !important;
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+body.dark-mode .btn-danger:hover {
+    background-color: #bb2d3b !important;
+    border-color: #b02a37 !important;
+}
+
+/* ================================
+   Dark Mode – Eingabefelder
+   ================================ */
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background-color: #2a2a2a !important;
+    color: #f0f0f0 !important;
+    border-color: #555 !important;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+    background-color: #333 !important;
+    border-color: #888 !important;
+    color: #ffffff !important;
+}
+
+/* ================================
+   Detailseite – Abstand über Boxen
+   ================================ */
+
+.detail-header-buttons {
+    margin-bottom: 2rem; /* Abstand zwischen kleinen Buttons und Infoboxen */
+}
+
+/* ================================
+   Gebäudeliste – Tabellenlayout
+   ================================ */
+
+/* Zeilen in der Gebäudeliste wieder kompakt */
+#building-table tbody td {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+/* Auch im Dark Mode kompakt halten */
+body.dark-mode #building-table tbody td {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+/* ================================
+   Gebäudeliste – Aktions-Buttons
+   ================================ */
+
+/* Buttons in der Tabelle etwas kompakter (nutzt Bootstrap .btn-sm) */
+#building-table .btn {
+    padding: 0.25rem 0.6rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.2 !important;
+}
+
+/* Abstand zwischen den Aktions-Buttons */
+#building-table .btn + .btn {
+    margin-left: 0.25rem;
+}
+
+/* Wrapper für Aktions-Buttons zentriert */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ================================
+   Gebäudeliste – obere Button-Leiste
+   ================================ */
+
+/* Container für "Neues Gebäude / CSV / Excel / PDF / Alle löschen" */
+.building-list-buttons .btn {
+    padding: 0.5rem 1.25rem !important; /* gleiche Höhe für alle */
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Einheitliche Button-Höhe für Tabellen-Buttons (Details / Bearbeiten / Löschen) */
+#building-table .btn {
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Buttons in der Aktions-Spalte horizontal zentrieren */
+#building-table td:last-child {
+    text-align: center !important;
+}
+/* ============================================
+   Feintuning Gebäudeliste (building_list.html)
+   ============================================ */
+
+/* 1) Tabellenzeilen schmaler machen */
+#building-table tbody td {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+
+/* 2) Obere Buttons (Neues Gebäude / CSV / Excel / PDF / Alle löschen)
+      -> alle gleich hoch, Text sauber zentriert */
+.building-list-buttons .btn-sm {
+    display: inline-flex;
+    align-items: center;      /* vertikal zentriert */
+    justify-content: center;  /* horizontal zentriert */
+    padding: 0.40rem 1.20rem; /* Höhe + Breite */
+    font-size: 0.95rem;
+    line-height: 1.2;
+}
+
+.building-list-buttons .btn-sm + .btn-sm {
+    margin-left: 0.25rem;     /* Abstand zwischen den Buttons */
+}
+
+/* 3) Buttons in der Aktions-Spalte der Tabelle
+      -> einheitliche Größe, Text mittig, kleiner als die oberen Buttons */
+#building-table td.text-end .btn-sm {
+    display: inline-flex;
+    align-items: center;      /* vertikal zentriert */
+    justify-content: center;  /* horizontal zentriert */
+    padding: 0.25rem 0.60rem; /* kompakte Höhe/Breite */
+    font-size: 0.85rem;
+    line-height: 1.2;
+    min-width: 4.6rem;        /* gleiche Breite für Details/Bearbeiten/Löschen */
+    text-align: center;
+}
+
+#building-table td.text-end .btn-sm + .btn-sm {
+    margin-left: 0.25rem;     /* Abstand zwischen Details / Bearbeiten / Löschen */
+}
+/* Einheitliche Buttons in der Tabelle */
+.table td .btn {
+    height: 36px !important;      /* feste Höhe */
+    line-height: 36px !important; /* Text vertikal zentriert */
+    padding: 0 16px !important;   /* horizontale Größe */
+    font-size: 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+}
+
+/* Einheitliche Mindestbreiten */
+.btn-details {
+    min-width: 80px;
+}
+
+.btn-edit {
+    min-width: 100px;
+}
+
+.btn-delete {
+    min-width: 90px;
+}
+
+/* ====================================================================== */
+/* Dashboard Cards – Illustrationen + Neon im Dark Mode                   */
+/* ====================================================================== */
+
+.dashboard-card {
+    border-radius: 1rem;
+    border: 1px solid rgba(15, 23, 42, 0.08); /* sehr dezenter Rand im Light-Mode */
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.15s ease,
+        background-color 0.25s ease;
+    background-color: #ffffff;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.15);
+}
+
+/* Icon-Blase in der Card */
+.dashboard-card-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.6rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    box-shadow: 0 8px 18px rgba(13, 110, 253, 0.45);
+}
+
+.dashboard-card-icon i {
+    line-height: 1;
+}
+
+/* Dark-Mode: Neon-Rand + Glow */
+body.dark-mode .dashboard-card {
+    background-color: #020617; /* richtig dunkles Blau/Schwarz */
+    border-color: rgba(129, 140, 248, 0.8); /* neon-bläulicher Rand */
+    box-shadow:
+        0 0 0 1px rgba(129, 140, 248, 0.9),
+        0 0 25px rgba(129, 140, 248, 0.5),
+        0 18px 40px rgba(15, 23, 42, 0.9);
+}
+
+/* optional: subtiler Glow-Ring als Pseudo-Element */
+body.dark-mode .dashboard-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1px solid rgba(236, 72, 153, 0.35); /* pinker Außenring */
+    opacity: 0.0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+body.dark-mode .dashboard-card:hover::before {
+    opacity: 1;
+}
+
+/* Dark-Mode: Icon-Blase in Neon-Gradiant */
+body.dark-mode .dashboard-card-icon {
+    background: radial-gradient(circle at 30% 0,
+        #22d3ee 0%,
+        #6366f1 40%,
+        #a855f7 75%,
+        #f97316 100%);
+    box-shadow:
+        0 0 18px rgba(56, 189, 248, 0.7),
+        0 0 32px rgba(168, 85, 247, 0.7);
+}
+
+/* Textfarben in Dark-Mode ein bisschen aufhellen */
+body.dark-mode .dashboard-card .card-title {
+    color: #e5e7eb;
+}
+
+body.dark-mode .dashboard-card .card-text {
+    color: #9ca3af;
+}
+/* Dashboard-Karten – Bilder oben im Card-Layout */
+.dashboard-card-img {
+    height: 180px;          /* einheitliche Höhe */
+    object-fit: cover;      /* Bild wird zugeschnitten statt verzerrt */
+}
+
+/* kleine optische Optimierung der Cards */
+.dashboard-card {
+    border-radius: 1rem;
+    overflow: hidden;       /* damit Bild und Card die gleiche Rundung haben */
+}
+/* Dashboard-Hintergrund (Light/Dark) */
+
+.dashboard-background {
+    position: relative;
+    padding-top: 3rem;
+    padding-bottom: 4rem;
+    /* etwas Luft links/rechts wie die anderen Seiten */
+}
+
+/* Bild als fixen Hintergrund nur auf dem Dashboard */
+.dashboard-background::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: url("../img/dashboard-bg-light.png");
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-size: cover;
+}
+
+/* im Dark-Mode anderes Bild */
+body.dark-mode .dashboard-background::before {
+    background-image: url("../img/dashboard-bg-dark.png");
+}
+
+/* === Globale Seiten-Hintergründe === */
+
+/* Standard: Ziegel für alle "normalen" Seiten (Light Mode) */
+body {
+    background-image: url("../img/bg-bricks-light.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
+    background-attachment: fixed;
+}
+
+/* Standard: Ziegel im Dark Mode */
+body.dark-mode {
+    background-image: url("../img/bg-bricks-dark.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
+    background-attachment: fixed;
+}
+
+/* Dashboard: eigene Hintergrundbilder (überlagern die Ziegel) */
+body.dashboard-page {
+    background-image: url("../img/bg-dashboard-light.png");
+}
+
+/* Dashboard + Dark Mode: dunkle Version */
+body.dark-mode.dashboard-page {
+    background-image: url("../img/bg-dashboard-dark.png");
+}
+
+/* Calculator – Light Mode Ziegel-Hintergrund */
+body:not(.dark-mode) .page-calculator-bg {
+    background-image: url("../img/bg-bricks-light.png");
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+}
+
+body.light-mode.calculator-page {
+    background-image: url("../img/bg-bricks-light.png"); /* gleiche Stelle wie Dark, nur andere Datei */
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+body.dark-mode.calculator-page {
+    background-image: url("../img/bg-bricks-dark.png"); /* Beispielname */
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+}
