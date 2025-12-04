@@ -6,6 +6,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from energyapp.forms import BuildingForm
 from energyapp.logic.building import calc_heating_demand
 from energyapp.models import Building
+from .forms import BuildingForm, SimpleBuildingForm
+from .calc import calc_heating_demand
+from .models import Building
+
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from reportlab.lib.pagesizes import A4
@@ -32,7 +36,7 @@ def dashboard(request):
     )
 
 
-def building_create(request):
+def building_create_detailed(request):
     result = None
 
     if request.method == "POST":
@@ -78,8 +82,58 @@ def building_create(request):
     context = {
         "form": form,
         "result": result,
+        "edit_mode": False,
+        "simple_mode": False,
     }
     return render(request, "energyapp/building_form.html", {"form": form, "result": result})
+
+def building_create_simple(request):
+    if request.method == "POST":
+        form = SimpleBuildingForm(request.POST)
+        if form.is_valid():
+            building = form.save()
+
+            # Berechnung durchführen
+            result = calc_heating_demand(building)
+
+            # Ergebnisse ins Modell schreiben
+            building.result_Q_T = result["Q_T"]
+            building.result_Q_V = result["Q_V"]
+            building.result_Q_I = result["Q_I"]
+            building.result_Q_S = result["Q_S"]
+            building.result_Q_h = result["Q_h"]
+
+            building.result_H_T = result["H_T"]
+            building.result_H_V = result["H_V"]
+
+            building.result_floor_area = result["floor_area"]
+            building.result_roof_area = result["roof_area"]
+            building.result_opaque_wall_area = result["opaque_wall_area"]
+            building.result_window_area = result["window_area"]
+
+            building.result_Q_S_n = result["Q_S_n"]
+            building.result_Q_S_e = result["Q_S_e"]
+            building.result_Q_S_s = result["Q_S_s"]
+            building.result_Q_S_w = result["Q_S_w"]
+
+            building.result_Q_PV_total = result["Q_PV_total"]
+            building.result_Q_PV_on = result["Q_PV_on"]
+            building.result_Q_PV_off = result["Q_PV_off"]
+
+            building.save()
+            return redirect("building_list")
+    else:
+        form = SimpleBuildingForm()
+
+    return render(
+        request,
+        "energy/building_form.html",
+        {
+            "form": form,
+            "edit_mode": False,
+            "simple_mode": True,  # Flag für Template
+        },
+    )
 
 
 def building_list(request):
