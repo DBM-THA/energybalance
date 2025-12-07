@@ -3,12 +3,9 @@ from io import BytesIO
 
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from energyapp.forms import BuildingForm
+from energyapp.forms import BuildingForm,SimpleBuildingForm
 from energyapp.logic.building import calc_heating_demand
 from energyapp.models import Building
-from .forms import BuildingForm, SimpleBuildingForm
-from .calc import calc_heating_demand
-from .models import Building
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -127,7 +124,7 @@ def building_create_simple(request):
 
     return render(
         request,
-        "energy/building_form.html",
+        "energyapp/building_form.html",
         {
             "form": form,
             "edit_mode": False,

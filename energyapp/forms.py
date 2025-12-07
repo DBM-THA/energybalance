@@ -1,6 +1,5 @@
-from django import forms
 from .models import Building
-
+from django import forms
 
 class SimpleBuildingForm(forms.ModelForm):
     class Meta:
