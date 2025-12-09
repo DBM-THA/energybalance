@@ -161,7 +161,13 @@
     {% if not simple_mode %}
     <div class="col-md-6">
         <fieldset>
-            <legend>Innere Gewinne</legend>
+            <legend class="d-flex align-items-center">
+                <span>Innere Gewinne</span>
+                <a href="{% url 'internal_gains' %}"
+                   class="btn btn-outline-secondary btn-sm ms-2">
+                    Details
+                </a>
+            </legend>
             <div class="mb-3">
                 {{ form.person_density.label_tag }}
                 {{ form.person_density|add_class:"form-control" }}
@@ -175,6 +181,7 @@
         </fieldset>
     </div>
     {% endif %}
+
 
     <div class="col-md-6">
         <fieldset>
