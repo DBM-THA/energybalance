@@ -53,3 +53,25 @@ class BuildingForm(forms.ModelForm):
             "pv_specific_yield",
             "pv_self_consumption_share",
         ]
+        
+from django import forms
+from .models import Building, SummerProtection
+
+
+class SummerProtectionForm(forms.ModelForm):
+    class Meta:
+        model = SummerProtection
+        fields = [
+            "name",
+            "floor_area",
+            "window_area_north",
+            "window_area_south",
+            "window_area_east",
+            "window_area_west",
+            "g_value",
+            "shading_factor",
+            "internal_gains_density",
+            "outdoor_temp_peak",
+            "set_temp",
+            "override_indicator",
+        ]

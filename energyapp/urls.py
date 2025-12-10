@@ -1,5 +1,7 @@
 from django.urls import path
 from .views import building_view
+from .views import summer as summer_views
+
 
 urlpatterns = [
     path("", building_view.dashboard, name="dashboard"),
@@ -15,4 +17,5 @@ urlpatterns = [
     path("buildings/export/xlsx/", building_view.building_export_xlsx, name="building_export_xlsx"),
     path("buildings/export/pdf/", building_view.building_export_pdf, name="building_export_pdf"),
     path("buildings/<int:pk>/result/pdf/", building_view.building_result_pdf, name="building_result_pdf"),
+    path("summer/", summer_views.summer_view, name="summer"),
 ]
