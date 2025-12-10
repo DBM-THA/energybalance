@@ -1,0 +1,252 @@
+{% extends "energyapp/base.html" %}
+
+{% block content %}
+
+<style>
+  .summer-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-top: 1rem;
+  }
+
+  .summer-column {
+    flex: 1;
+  }
+
+  .summer-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    background: #ffffff;
+  }
+
+  .summer-card h2,
+  .summer-card h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .summer-field {
+    margin-bottom: 0.5rem;
+  }
+
+  .summer-field label {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .summer-field input,
+  .summer-field select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.35rem 0.5rem;
+  }
+
+  .readonly-input {
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+  }
+
+  .rating-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .rating-low {
+    background: #e6f5e6;
+    color: #2f7d2f;
+  }
+
+  .rating-medium {
+    background: #fff7e0;
+    color: #b08a1a;
+  }
+
+  .rating-high {
+    background: #fde4e4;
+    color: #b13131;
+  }
+
+  .summer-actions {
+    margin-top: 1rem;
+  }
+
+  .summer-actions button {
+    padding: 0.5rem 1.2rem;
+  }
+
+  .rating-scale {
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 0.5rem;
+  }
+</style>
+
+<h1>Summer Overheating Module</h1>
+<p>
+  This module calculates a simplified summer overheating indicator
+  in <strong>W/m²</strong> based on window areas, g-value, shading
+  and internal gains.
+</p>
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="summer-layout">
+    <!-- LEFT COLUMN: INPUTS -->
+    <div class="summer-column">
+
+      <div class="summer-card">
+        <h2>Scenario</h2>
+        <div class="summer-field">
+          {{ form.name.label_tag }}
+          {{ form.name }}
+        </div>
+      </div>
+
+      <div class="summer-card">
+        <h2>Geometry</h2>
+        <div class="summer-field">
+          {{ form.floor_area.label_tag }}
+          {{ form.floor_area }}
+        </div>
+        <div class="summer-field">
+          {{ form.window_area_north.label_tag }}
+          {{ form.window_area_north }}
+        </div>
+        <div class="summer-field">
+          {{ form.window_area_south.label_tag }}
+          {{ form.window_area_south }}
+        </div>
+        <div class="summer-field">
+          {{ form.window_area_east.label_tag }}
+          {{ form.window_area_east }}
+        </div>
+        <div class="summer-field">
+          {{ form.window_area_west.label_tag }}
+          {{ form.window_area_west }}
+        </div>
+      </div>
+
+      <div class="summer-card">
+        <h2>Optical properties</h2>
+        <div class="summer-field">
+          {{ form.g_value.label_tag }}
+          {{ form.g_value }}
+        </div>
+        <div class="summer-field">
+          {{ form.shading_factor.label_tag }}
+          {{ form.shading_factor }}
+        </div>
+      </div>
+
+      <div class="summer-card">
+        <h2>Internal loads</h2>
+        <div class="summer-field">
+          {{ form.internal_gains_density.label_tag }}
+          {{ form.internal_gains_density }}
+        </div>
+      </div>
+
+      <div class="summer-card">
+        <h2>Climate (info only)</h2>
+        <div class="summer-field">
+          {{ form.outdoor_temp_peak.label_tag }}
+          {{ form.outdoor_temp_peak }}
+        </div>
+        <div class="summer-field">
+          {{ form.set_temp.label_tag }}
+          {{ form.set_temp }}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: OUTPUTS -->
+    <div class="summer-column">
+
+      <div class="summer-card">
+        <h2>Auto-calculated indicator</h2>
+        {% if result %}
+          <div class="summer-field">
+            <label>Auto indicator [W/m²]</label>
+            <input class="readonly-input" type="number"
+                   value="{{ result.auto_indicator_W_m2|floatformat:1 }}"
+                   readonly>
+          </div>
+          <p style="font-size:0.85rem; color:#555;">
+            Based on window areas, g-value, shading factor Fc, internal
+            gains and floor area. Uses a simplified summer solar intensity
+            of 500&nbsp;W/m².
+          </p>
+        {% else %}
+          <p>No result calculated yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="summer-card">
+        <h2>Override (optional)</h2>
+        <div class="summer-field">
+          {{ form.override_indicator.label_tag }}
+          {{ form.override_indicator }}
+        </div>
+        <p style="font-size:0.85rem; color:#555;">
+          If this value is filled, it replaces the auto-calculated
+          indicator. Leave empty to use the auto value.
+        </p>
+      </div>
+
+      <div class="summer-card">
+        <h2>Effective result</h2>
+        {% if result %}
+          <div class="summer-field">
+            <label>Effective indicator [W/m²]</label>
+            <input class="readonly-input" type="number"
+                   value="{{ result.effective_indicator_W_m2|floatformat:1 }}"
+                   readonly>
+          </div>
+
+          {% comment %}
+            Rating-Badge Klasse je nach Text (low/medium/high).
+          {% endcomment %}
+          {% with result.rating as r %}
+            {% if "low" in r %}
+              {% set_class = "rating-low" %}
+            {% elif "medium" in r %}
+              {% set_class = "rating-medium" %}
+            {% elif "high" in r %}
+              {% set_class = "rating-high" %}
+            {% else %}
+              {% set_class = "" %}
+            {% endif %}
+            <p>
+              <span class="rating-badge {{ set_class }}">{{ r }}</span>
+            </p>
+          {% endwith %}
+
+          <div class="rating-scale">
+            <strong>Scale:</strong>
+            <br> &lt; 10 W/m² → low overheating risk (green)
+            <br> 10–20 W/m² → medium overheating risk (yellow)
+            <br> &gt; 20 W/m² → high overheating risk (red)
+          </div>
+        {% else %}
+          <p>No effective result yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="summer-actions">
+        <button type="submit">Calculate &amp; Save</button>
+      </div>
+
+    </div>
+  </div>
+</form>
+
+{% endblock %}
