@@ -1,0 +1,16 @@
+* [33m9cf6c02[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/gwp-models[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/feature/gwp-models[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m adding openpyxl to the requirements
+* [33mf1c2ddf[m Refactor building views and update URL patterns
+* [33mcd038d0[m Cleanup: ignore .idea project files
+*   [33m17739d9[m Merge pull request #14 from DBM-THA/LennyHeinrich-patch-1
+[32m|[m[33m\[m  
+[32m|[m * [33mc3eab70[m hi
+[32m|[m * [33m829b6d3[m bitte zusammenfügen
+[32m|[m * [33m8f7f326[m Create envelope.py
+* [33m|[m   [33m89a79f5[m Merge pull request #16 from DBM-THA/ProfMaile-patch-1
+[34m|[m[35m\[m [33m\[m  
+[34m|[m * [33m\[m   [33ma0a756c[m Merge branch 'main' into ProfMaile-patch-1
+[34m|[m [36m|[m[34m\[m [33m\[m  
+[34m|[m [36m|[m[34m/[m [33m/[m  
+[34m|[m[34m/[m[36m|[m [33m|[m   
+* [36m|[m [33m|[m   [33me27da58[m Merge pull request #19 from DBM-THA/feature/integrate-energy-app
+[1;32m|[m[1;33m\[m [36m\[m [33m\[m  
