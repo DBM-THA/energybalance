@@ -192,3 +192,134 @@ class Layer(models.Model):
 # ============================
 # GROUP 8: Load Profile
 # ============================
+
+# ============================
+# GROUP 10: Sommerlicher Wärmeschutz
+# ============================
+
+class SummerProtection(models.Model):
+
+    name = models.CharField(
+        max_length=200,
+        help_text="Name des Szenarios (z.B. 'Standard Sommerfall')."
+    )
+
+    # Geometrie
+    floor_area = models.FloatField(
+        default=1.0,
+        help_text="Grundfläche des Raums / der Zone in m²."
+    )
+    window_area_north = models.FloatField(
+        default=0.0,
+        help_text="Fensterfläche Nord in m²."
+    )
+    window_area_south = models.FloatField(
+        default=0.0,
+        help_text="Fensterfläche Süd in m²."
+    )
+    window_area_east = models.FloatField(
+        default=0.0,
+        help_text="Fensterfläche Ost in m²."
+    )
+    window_area_west = models.FloatField(
+        default=0.0,
+        help_text="Fensterfläche West in m²."
+    )
+
+    # Optische Eigenschaften
+    g_value = models.FloatField(
+        default=0.6,
+        help_text="Gesamtenergiedurchlassgrad g der Verglasung (-)."
+    )
+    shading_factor = models.FloatField(
+        default=1.0,
+        help_text="Verschattungsfaktor Fc (0–1, 1 = kein Sonnenschutz)."
+    )
+
+    # Innere Lasten (vereinfachte spezifische Last)
+    internal_gains_density = models.FloatField(
+        default=5.0,
+        help_text="Innere Lasten q_int in W/m² (Personen, Geräte etc.)."
+    )
+
+    # Klima (Infofelder)
+    outdoor_temp_peak = models.FloatField(
+        default=30.0,
+        help_text="Sommerliche Außentemperatur-Spitze in °C (nur Info)."
+    )
+    set_temp = models.FloatField(
+        default=26.0,
+        help_text="Gewünschte Raumtemperatur in °C (nur Info)."
+    )
+
+    # Ergebnisse
+    auto_indicator = models.FloatField(
+        default=0.0,
+        help_text="Automatisch berechneter Kennwert in W/m²."
+    )
+    override_indicator = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Optionaler Override-Wert in W/m²."
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # ---- Logik-Helfer ----
+
+    def calculate_auto_indicator(self, I_summer: float = 500.0) -> float:
+        """
+        Berechnet den vereinfachten Überhitzungskennwert in W/m².
+
+        Formel:
+            A_win   = Summe Fensterflächen
+            Q_S     = A_win * g * Fc * I_summer
+            Q_I     = q_int * A_floor
+            Kennwert = (Q_S + Q_I) / A_floor
+        """
+        a_win = (
+            self.window_area_north
+            + self.window_area_south
+            + self.window_area_east
+            + self.window_area_west
+        )
+
+        # Solare Gewinne (W)
+        Q_s = a_win * self.g_value * self.shading_factor * I_summer
+
+        # Innere Gewinne (W)
+        Q_i = self.internal_gains_density * self.floor_area
+
+        if self.floor_area > 0:
+            indicator = (Q_s + Q_i) / self.floor_area
+        else:
+            indicator = 0.0
+
+        self.auto_indicator = indicator
+        self.save()
+        return indicator
+
+    @property
+    def effective_indicator(self) -> float:
+        """
+        Wert, der für andere Module benutzt werden soll:
+        Override, falls gesetzt, sonst auto_indicator.
+        """
+        if self.override_indicator is not None:
+            return self.override_indicator
+        return self.auto_indicator
+
+    @property
+    def rating(self) -> str:
+        """
+        Einfache verbale Einstufung des Kennwertes.
+        """
+        value = self.effective_indicator
+        if value < 10:
+            return "geringes Überhitzungsrisiko"
+        elif value < 20:
+            return "mittleres Überhitzungsrisiko"
+        return "hohes Überhitzungsrisiko"
+
+    def __str__(self):
+        return f"Sommerlicher Wärmeschutz: {self.name}"
