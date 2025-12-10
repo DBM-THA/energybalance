@@ -53,6 +53,10 @@ class BuildingForm(forms.ModelForm):
             "pv_specific_yield",
             "pv_self_consumption_share",
         ]
+        
+from django import forms
+from .models import Building, SummerProtection
+
 
 class SummerProtectionForm(forms.ModelForm):
     class Meta:
