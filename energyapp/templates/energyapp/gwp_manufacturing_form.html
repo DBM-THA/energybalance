@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>GWP Herstellung (Tab 06)</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary">Speichern</button>
+</form>
+
+<a href="{% url 'gwp_overview' building.id %}">Zurück</a>
+{% endblock %}
