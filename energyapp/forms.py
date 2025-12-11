@@ -1,5 +1,26 @@
-from django import forms
 from .models import Building
+from django import forms
+
+class SimpleBuildingForm(forms.ModelForm):
+    class Meta:
+        model = Building
+        fields = [
+            "name",
+            "length_ns",
+            "width_ow",
+            "storeys",
+            "room_height",
+            "u_wall",
+            "u_roof",
+            "u_floor",
+            "u_window",
+            "air_change_rate",
+            "degree_days",
+            "setpoint_temp",
+            "pv_roof_share",
+            "pv_specific_yield",
+            "pv_self_consumption_share",
+        ]
 
 
 class BuildingForm(forms.ModelForm):
