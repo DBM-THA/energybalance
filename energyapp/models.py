@@ -1,5 +1,6 @@
 from django.db import models
 
+
 # ============================
 # GROUP 1: Building Data
 # ============================
@@ -82,6 +83,39 @@ class Building(models.Model):
     result_Q_PV_on = models.FloatField(null=True, blank=True)
     result_Q_PV_off = models.FloatField(null=True, blank=True)
 
+    # ============================
+    # NEW APPROACH – STRUCTURED GROUP PLACEHOLDERS
+    # Issue #3: Vorbereitung auf modulare Gebäudedatenstruktur
+    # ============================
+    internal_loads = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Strukturierte Daten zu internen Lasten (neuer Ansatz, Issue #3)",
+    )
+
+    ventilation_data = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Strukturierte Daten zur Lüftung (neuer Ansatz, Issue #3)",
+    )
+
+    heating_system = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Strukturierte Daten zum Heizsystem (neuer Ansatz, Issue #3)",
+    )
+
+    pv_data = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Strukturierte PV-Daten (neuer Ansatz, Issue #3)",
+    )
+
+    gwp_data = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Strukturierte GWP-Daten (neuer Ansatz, Issue #3)",
+    )
 
     def __str__(self):
         return self.name
@@ -100,11 +134,10 @@ class EnvelopeElement(models.Model):
     name = models.CharField(max_length=200)
     use_custom_layers = models.BooleanField(
         default=True,
-        help_text="Falls deaktiviert, wird ein vorgegebener U-Wert genutzt."
+        help_text="Falls deaktiviert, wird ein vorgegebener U-Wert genutzt.",
     )
     u_value_external = models.FloatField(
-        null=True, blank=True,
-        help_text="Falls vorhanden, extern vorgegebener U-Wert"
+        null=True, blank=True, help_text="Falls vorhanden, extern vorgegebener U-Wert"
     )
     u_value_calculated = models.FloatField(null=True, blank=True)
 
@@ -149,12 +182,14 @@ class Layer(models.Model):
     element = models.ForeignKey(
         EnvelopeElement,
         on_delete=models.CASCADE,
-        related_name="layers"
+        related_name="layers",
     )
     layer_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     name = models.CharField(max_length=200)
     thickness = models.FloatField(null=True, blank=True, help_text="d in m")
-    lambda_value = models.FloatField(null=True, blank=True, help_text="λ in W/mK")
+    lambda_value = models.FloatField(
+        null=True, blank=True, help_text="λ in W/mK"
+    )
     R_value = models.FloatField(null=True, blank=True, help_text="Widerstand R")
 
     def save(self, *args, **kwargs):
@@ -168,6 +203,7 @@ class Layer(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.layer_type})"
+
 
 # ============================
 # GROUP 3: Internal Gains
