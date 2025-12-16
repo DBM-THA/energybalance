@@ -15,5 +15,6 @@ urlpatterns = [
     path("buildings/export/xlsx/", building_view.building_export_xlsx, name="building_export_xlsx"),
     path("buildings/export/pdf/", building_view.building_export_pdf, name="building_export_pdf"),
     path("buildings/<int:pk>/result/pdf/", building_view.building_result_pdf, name="building_result_pdf"),
+    path("summary-dashboard/", building_view.summary_dashboard, name="summary_dashboard"),
     path("internal-gains/", building_view.internal_gains, name="internal_gains"),
 ]

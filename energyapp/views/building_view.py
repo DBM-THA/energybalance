@@ -542,3 +542,26 @@ def building_detail(request, pk):
     """
     building = get_object_or_404(Building, pk=pk)
     return render(request, "energyapp/building_detail.html", {"building": building})
+
+def summary_dashboard(request):
+    building = Building.objects.order_by("-id").first()
+
+    energy_input = None
+    energy_results = None
+
+    if building and hasattr(building, "energy_input"):
+        energy_input = building.energy_input
+
+        # Berechnung einfügen (wenn vorhanden)
+        from energyapp.logic.energy_calculator import calculate_energy_results
+        energy_results = calculate_energy_results(energy_input)
+
+    return render(
+        request,
+        "energyapp/summary_dashboard.html",
+        {
+            "energy_input": energy_input,
+            "energy_results": energy_results,
+            "building": building,
+        },
+    )
