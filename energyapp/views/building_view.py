@@ -82,7 +82,7 @@ def building_create_detailed(request):
         "edit_mode": False,
         "simple_mode": False,
     }
-    return render(request, "energyapp/building_form.html", {"form": form, "result": result})
+    return render(request, "energyapp/building_form.html", context)
 
 def building_create_simple(request):
     if request.method == "POST":
@@ -531,6 +531,9 @@ def building_result_pdf(request, pk):
     )
     return response
 
+def internal_gains(request):
+    # Platzhalter – später durch richtigen Inhalt ersetzen (Derya, Lucy)
+    return render(request, "energyapp/internal_gains.html")
 
 def building_detail(request, pk):
     """
