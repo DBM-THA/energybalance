@@ -191,4 +191,58 @@ class Layer(models.Model):
 
 # ============================
 # GROUP 8: Load Profile
+from django.db import models
+
+
+class EnergyProject(models.Model):
+    name = models.CharField(max_length=200, default="Machbarkeitsstudie")
+    standort = models.CharField(max_length=100, default="Würzburg")
+
+    # Geometrie & Allgemeine Daten (aus Blatt 04)
+    bgf = models.FloatField(verbose_name="BGF R", help_text="m²")
+    bri = models.FloatField(verbose_name="BRI", help_text="m³")
+    ngf = models.FloatField(verbose_name="Nutzfläche (NGF)", help_text="m²")
+
+    # Lüftung (aus Blatt 04)
+    luftwechselrate = models.FloatField(default=0.49, help_text="1/h")
+    wrg_wirkungsgrad = models.FloatField(default=0.75, verbose_name="Wirkungsgrad WRG")
+    luftvolumenstrom = models.FloatField(help_text="m³/h", blank=True, null=True)
+
+    # Klimadaten & Physik (aus Blatt 03)
+    raum_soll_temp = models.FloatField(default=20.0, verbose_name="Raum-Soll-Temperatur")
+    c_wirk_pauschal = models.FloatField(default=50, verbose_name="Speicherfähigkeit Wh/m²K")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Automatische Berechnung Volumenstrom falls leer
+        if not self.luftvolumenstrom:
+            # Vereinfachte Annahme analog Excel
+            self.luftvolumenstrom = self.bri * 0.8 * self.luftwechselrate  # V_netto * n
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class BuildingComponent(models.Model):
+    ORIENTATION_CHOICES = [
+        ('N', 'Nord'),
+        ('O', 'Ost'),
+        ('S', 'Süd'),
+        ('W', 'West'),
+        ('H', 'Horizontal/Dach'),
+        ('X', 'Keine/Erde'),
+    ]
+
+    project = models.ForeignKey(EnergyProject, on_delete=models.CASCADE, related_name='components')
+    name = models.CharField(max_length=100)  # z.B. "Massive Außenwand Süd"
+    area = models.FloatField(verbose_name="Fläche m²")
+    u_value = models.FloatField(verbose_name="U-Wert W/m²K")
+    fx_factor = models.FloatField(default=1.0, verbose_name="Temperaturkorrekturfaktor Fx")
+    orientation = models.CharField(max_length=1, choices=ORIENTATION_CHOICES, default='X')
+    g_value = models.FloatField(default=0.0, verbose_name="g-Wert (nur Fenster)", blank=True)
+
+    def ht_value(self):
+        return self.area * self.u_value * self.fx_factor
 # ============================
