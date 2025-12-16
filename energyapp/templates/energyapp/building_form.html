@@ -19,6 +19,16 @@
             Geometrie, U-Werte, interne und solare Gewinne erfassen.
         </p>
     </div>
+    <div class="btn-group mb-4" role="group">
+      <a href="{% url 'calculator_simple' %}"
+         class="btn btn-outline-primary {% if simple_mode %}active{% endif %}">
+        Einfache Eingabe
+      </a>
+      <a href="{% url 'calculator_detailed' %}"
+         class="btn btn-outline-primary {% if not simple_mode %}active{% endif %}">
+        Detaillierte Eingabe
+      </a>
+    </div>
 
     <div class="page-header-actions">
         <a href="{% url 'building_list' %}" class="btn btn-outline-secondary btn-sm">
@@ -110,11 +120,7 @@
         </fieldset>
     </div>
 
-
-    <!-- *** SIMPLE MODE: KEINE FENSTERANTEILE, KEINE G-WERTE, KEINE PERSONEN *** -->
     {% if not simple_mode %}
-
-    <!-- Fensterflächen -->
     <div class="col-md-6">
         <fieldset>
             <legend>Fensterflächen [%]</legend>
@@ -177,12 +183,19 @@
 
         </fieldset>
     </div>
+    {% endif %}
 
     <!-- Interne Gewinne -->
+    {% if not simple_mode %}
     <div class="col-md-6">
         <fieldset>
-            <legend>Innere Gewinne</legend>
-
+            <legend class="d-flex align-items-center">
+                <span>Innere Gewinne</span>
+                <a href="{% url 'internal_gains' %}"
+                   class="btn btn-outline-secondary btn-sm ms-2">
+                    Details
+                </a>
+            </legend>
             <div class="mb-3">
                 {{ form.person_density.label_tag }}
                 {{ form.person_density|add_class:"form-control" }}
@@ -197,6 +210,8 @@
 
         </fieldset>
     </div>
+    {% endif %}
+
 
     {% endif %}
 
