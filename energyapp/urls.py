@@ -17,4 +17,6 @@ urlpatterns = [
     path("buildings/<int:pk>/result/pdf/", building_view.building_result_pdf, name="building_result_pdf"),
     path("summary-dashboard/", building_view.summary_dashboard, name="summary_dashboard"),
     path("internal-gains/", building_view.internal_gains, name="internal_gains"),
+    path("envelope/", building_view.envelope_detail, name="envelope_detail"),
+    path("solar-gains/", building_view.solar_gains, name="solar_gains"),
 ]

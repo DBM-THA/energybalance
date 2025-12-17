@@ -535,6 +535,16 @@ def internal_gains(request):
     # Platzhalter – später durch richtigen Inhalt ersetzen (Derya, Lucy)
     return render(request, "energyapp/internal_gains.html")
 
+def envelope_detail(request):
+    # Platzhalter – später durch richtigen Inhalt ersetzen
+    return render(request, "energyapp/envelope.html")
+
+
+def solar_gains(request):
+    # Platzhalter – später durch richtigen Inhalt ersetzen
+    return render(request, "energyapp/solar_gains.html")
+
+
 def building_detail(request, pk):
     """
     Detailansicht eines Gebäudes mit gespeichertem Ergebnis.
