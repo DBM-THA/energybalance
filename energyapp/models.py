@@ -194,28 +194,28 @@ class Layer(models.Model):
 # ============================
 
 # ============================
-# GROUP 10: Summer Protection
+# GROUP 10: Summer Protection (Sommerlicher Wärmeschutz)
 # ============================
 class SummerProtection(models.Model):
-    name = models.CharField(max_length=100, default="Sommerlicher Wärmeschutz")
+    name = models.CharField(
+        max_length=100,
+        default="Sommerlicher Wärmeschutz",
+        help_text="Name des Szenarios (z.B. 'Standard Sommerfall').",
+    )
 
     # Bezug zum Gebäude
     building = models.ForeignKey(
         Building,
         on_delete=models.CASCADE,
-        related_name="summer_protection",
+        related_name="summer_protections",
     )
 
-    # ----------------------------
-    # Fixed building-related data
-    # ----------------------------
-
+    # Nur feste Werte (keine Berechnungen!)
     GLAZING_CATEGORY_CHOICES = [
         ("double", "zweifach"),
         ("triple", "dreifach"),
         ("solar", "Sonnenschutzglas (g ≤ 0.40)"),
     ]
-
     glazing_category = models.CharField(
         "Verglasungskategorie",
         max_length=20,
@@ -224,36 +224,32 @@ class SummerProtection(models.Model):
     )
 
     SHADING_TYPE_CHOICES = [
-        ("none", "ohne Sonnenschutz"),                 # Tabelle Zeile 1
-        ("internal", "innenliegend / zwischen Scheiben"),  # Tabelle Zeile 2
-        ("roller_closed", "Rollladen geschlossen"),    # Tabelle 3.1
-        ("jalousie_45", "Jalousie 45°"),                # Tabelle 3.2.1
-        ("awning", "Markise"),                          # Tabelle 3.3
-        ("overhang", "Vordach / Überhang"),             # Tabelle 3.4
+        ("none", "ohne Sonnenschutz"),                      # Zeile 1
+        ("internal", "innenliegend / zwischen Scheiben"),   # Zeile 2
+        ("roller_closed", "Rollladen geschlossen"),         # 3.1
+        ("jalousie_45", "Jalousie 45°"),                    # 3.2.1
+        ("awning", "Markise"),                              # 3.3
+        ("overhang", "Vordach / Überhang"),                 # 3.4
     ]
 
-    # Sonnenschutz je Orientierung
     shading_type_n = models.CharField(
         "Sonnenschutz Nord",
         max_length=30,
         choices=SHADING_TYPE_CHOICES,
         default="none",
     )
-
     shading_type_e = models.CharField(
         "Sonnenschutz Ost",
         max_length=30,
         choices=SHADING_TYPE_CHOICES,
         default="none",
     )
-
     shading_type_s = models.CharField(
         "Sonnenschutz Süd",
         max_length=30,
         choices=SHADING_TYPE_CHOICES,
         default="none",
     )
-
     shading_type_w = models.CharField(
         "Sonnenschutz West",
         max_length=30,
@@ -262,7 +258,4 @@ class SummerProtection(models.Model):
     )
 
     def __str__(self):
-        return f"{self.name} – {self.building.name}"
-
-
-
+        return f"{self.name} ({self.building.name})"
