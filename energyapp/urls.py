@@ -17,4 +17,6 @@ urlpatterns = [
     path("buildings/export/pdf/", building_view.building_export_pdf, name="building_export_pdf"),
     path("buildings/<int:pk>/result/pdf/", building_view.building_result_pdf, name="building_result_pdf"),
     path("summer/", summer_views.summer_view, name="summer"),
+    path("summer/step1/", summer_steps_views.summer_step1, name="summer_step1"),
+    path("summer/step2/", summer_steps_views.summer_step2, name="summer_step2"),
 ]
