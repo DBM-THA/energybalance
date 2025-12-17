@@ -1,4 +1,4 @@
-from .models import Building
+from .models import Building, SummerProtection
 from django import forms
 
 class SimpleBuildingForm(forms.ModelForm):
@@ -54,10 +54,6 @@ class BuildingForm(forms.ModelForm):
             "pv_self_consumption_share",
         ]
         
-from django import forms
-from .models import Building, SummerProtection
-
-
 class SummerProtectionForm(forms.ModelForm):
     class Meta:
         model = SummerProtection
