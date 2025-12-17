@@ -69,10 +69,8 @@ class SummerProtectionForm(forms.ModelForm):
             "night_ventilation",
             "passive_cooling",
         ]
-
+        
 from .models import SummerProtection
-from django import forms
-
 
 class SummerStep1Form(forms.ModelForm):
     class Meta:
@@ -99,4 +97,6 @@ class SummerStep2Form(forms.ModelForm):
             "night_ventilation",
             "passive_cooling",
         ]
+
+
 
