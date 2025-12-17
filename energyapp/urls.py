@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import building_view
-from .views import summer as summer_views
+from .views import summer_steps as summer_steps_views
 
 urlpatterns = [
     path("", building_view.dashboard, name="dashboard"),
@@ -16,7 +16,7 @@ urlpatterns = [
     path("buildings/export/xlsx/", building_view.building_export_xlsx, name="building_export_xlsx"),
     path("buildings/export/pdf/", building_view.building_export_pdf, name="building_export_pdf"),
     path("buildings/<int:pk>/result/pdf/", building_view.building_result_pdf, name="building_result_pdf"),
-    path("summer/", summer_views.summer_view, name="summer"),
+    path("summer/", summer_steps_views.summer_step1, name="summer"),
     path("summer/step1/", summer_steps_views.summer_step1, name="summer_step1"),
     path("summer/step2/", summer_steps_views.summer_step2, name="summer_step2"),
 ]
