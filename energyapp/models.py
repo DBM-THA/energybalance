@@ -203,14 +203,41 @@ class SummerProtection(models.Model):
         help_text="Name des Szenarios (z.B. 'Standard Sommerfall').",
     )
 
-    # Bezug zum Gebäude
     building = models.ForeignKey(
         Building,
         on_delete=models.CASCADE,
         related_name="summer_protections",
     )
 
-    # Nur feste Werte (keine Berechnungen!)
+    # ----------------------------
+    # Critical room (Excel Schritt 1 & 2)
+    # ----------------------------
+    ORIENTATION_CHOICES = [
+        ("N", "Nord"),
+        ("E", "Ost"),
+        ("S", "Süd"),
+        ("W", "West"),
+    ]
+    orientation = models.CharField(
+        "Fassadenorientierung (kritischer Raum)",
+        max_length=1,
+        choices=ORIENTATION_CHOICES,
+        default="S",
+    )
+
+    ngf_m2 = models.FloatField(
+        "Nettogrundfläche Raum (NGF) [m²]",
+        default=30.0,
+    )
+
+    window_area_m2 = models.FloatField(
+        "Fensterfläche (kritischer Raum) [m²]",
+        default=0.0,
+    )
+
+    # ----------------------------
+    # Fixed categories for Fc lookup (your table)
+    # ----------------------------
     GLAZING_CATEGORY_CHOICES = [
         ("double", "zweifach"),
         ("triple", "dreifach"),
@@ -231,31 +258,44 @@ class SummerProtection(models.Model):
         ("awning", "Markise"),                              # 3.3
         ("overhang", "Vordach / Überhang"),                 # 3.4
     ]
+    shading_type = models.CharField(
+        "Sonnenschutztyp (kritischer Raum)",
+        max_length=30,
+        choices=SHADING_TYPE_CHOICES,
+        default="none",
+    )
 
-    shading_type_n = models.CharField(
-        "Sonnenschutz Nord",
-        max_length=30,
-        choices=SHADING_TYPE_CHOICES,
+    # ----------------------------
+    # Step 3 inputs (Excel)
+    # ----------------------------
+    CLIMATE_REGION_CHOICES = [
+        ("A", "Klimaregion A"),
+        ("B", "Klimaregion B"),
+        ("C", "Klimaregion C"),
+    ]
+    climate_region = models.CharField(
+        "Klimaregion",
+        max_length=1,
+        choices=CLIMATE_REGION_CHOICES,
+        default="B",
+    )
+
+    NIGHT_VENT_CHOICES = [
+        ("none", "keine"),
+        ("slight", "erhöht leicht"),
+        ("strong", "erhöht stark"),
+    ]
+    night_ventilation = models.CharField(
+        "Nachtlüftung",
+        max_length=10,
+        choices=NIGHT_VENT_CHOICES,
         default="none",
     )
-    shading_type_e = models.CharField(
-        "Sonnenschutz Ost",
-        max_length=30,
-        choices=SHADING_TYPE_CHOICES,
-        default="none",
-    )
-    shading_type_s = models.CharField(
-        "Sonnenschutz Süd",
-        max_length=30,
-        choices=SHADING_TYPE_CHOICES,
-        default="none",
-    )
-    shading_type_w = models.CharField(
-        "Sonnenschutz West",
-        max_length=30,
-        choices=SHADING_TYPE_CHOICES,
-        default="none",
+
+    passive_cooling = models.BooleanField(
+        "Passive Kühlung vorhanden",
+        default=False,
     )
 
     def __str__(self):
-        return f"{self.name} ({self.building.name})"
+        return f"{self.name} ({self.orientation}) – {self.building.name}"
