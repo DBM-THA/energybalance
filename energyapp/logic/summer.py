@@ -1,90 +1,89 @@
-from energyapp.models import SummerProtection
+from ..models import SummerProtection
 
-# Vereinfachte konstante Strahlungsstärke im Sommer [W/m²]
-SUMMER_SOLAR_INTENSITY = 500.0
+# Fc-Tabelle nach DIN / Excel (nur die von euch genutzten Zeilen)
+FC_TABLE = {
+    ("none", "solar"): 1.00,
+    ("none", "triple"): 1.00,
+    ("none", "double"): 1.00,
+
+    ("internal", "solar"): 0.65,
+    ("internal", "triple"): 0.70,
+    ("internal", "double"): 0.65,
+
+    ("roller_closed", "solar"): 0.35,
+    ("roller_closed", "triple"): 0.30,
+    ("roller_closed", "double"): 0.30,
+
+    ("jalousie_45", "solar"): 0.30,
+    ("jalousie_45", "triple"): 0.25,
+    ("jalousie_45", "double"): 0.25,
+
+    ("awning", "solar"): 0.30,
+    ("awning", "triple"): 0.25,
+    ("awning", "double"): 0.25,
+
+    ("overhang", "solar"): 0.55,
+    ("overhang", "triple"): 0.50,
+    ("overhang", "double"): 0.50,
+}
 
 
 def calc_summer_overheating(sp: SummerProtection) -> dict:
     """
-    Calculate a simple summer overheating indicator in W/m²
-    plus some intermediate values.
-
-    Formula (very simplified):
-        A_win = sum of window areas
-        Q_solar = A_win * g * Fc * I_summer
-        Q_internal = q_int * A_floor
-        indicator = (Q_solar + Q_internal) / A_floor
+    Sommerlicher Wärmeschutz – Excel-Logik
+    Schritt 1: Fensterflächenanteil
+    Schritt 2: S_vorh
+    Schritt 3: S_zul
     """
 
-    # --- Grundgrößen / Geometrie ---
-    floor_area = sp.floor_area   # m², im Model definiert
+    # --- Inputs ---
+    ngf = sp.ngf_m2
+    a_win = sp.window_area_m2
+    orientation = sp.orientation
 
-    # Fensterflächen je Orientierung
-    win_n = sp.window_area_north
-    win_s = sp.window_area_south
-    win_e = sp.window_area_east
-    win_w = sp.window_area_west
+    building = sp.building
+    g_map = {
+        "N": building.g_n,
+        "E": building.g_e,
+        "S": building.g_s,
+        "W": building.g_w,
+    }
+    g = g_map.get(orientation, building.g_s)
 
-    window_area_total = win_n + win_s + win_e + win_w  # m²
+    fc = FC_TABLE.get((sp.shading_type, sp.glazing_category), 1.0)
 
-    # --- Optische Eigenschaften ---
-    g_value = sp.g_value
-    Fc = sp.shading_factor
+    # --- Schritt 1 ---
+    window_share = (a_win / ngf) if ngf > 0 else 0.0
 
-    # --- Innere Lasten ---
-    q_int = sp.internal_gains_density  # W/m²
+    # --- Schritt 2 ---
+    a_g_fc = a_win * g * fc
+    s_vorh = (a_g_fc / ngf) if ngf > 0 else 0.0
 
-    # --- Solare Gewinne (W) ---
-    # sehr vereinfachte Annahme: gleiche Strahlungsstärke für alle Orientierungen
-    Q_solar = window_area_total * g_value * Fc * SUMMER_SOLAR_INTENSITY  # W
+    # --- Schritt 3 (vereinfachte, saubere Basis wie Excel) ---
+    climate_base = {
+        "A": 0.050,
+        "B": 0.061,
+        "C": 0.070,
+    }
+    s1 = climate_base.get(sp.climate_region, 0.061)
 
-    # --- Innere Gewinne (W) ---
-    Q_internal = q_int * floor_area  # W
+    # Beispiel-Korrektur Fensterflächenanteil (wie euer Excel-Beispiel)
+    s2_1 = -0.006 if window_share >= 0.316 else 0.0
 
-    # --- Kennwert in W/m² ---
-    if floor_area > 0:
-        indicator = (Q_solar + Q_internal) / floor_area
-    else:
-        indicator = 0.0
+    s_zul = s1 + s2_1
 
-    # auto_indicator im Model aktualisieren
-    sp.auto_indicator = indicator
-    sp.save()
-
-    # Effective indicator (Override oder Auto)
-    if sp.override_indicator is not None:
-        effective_indicator = sp.override_indicator
-    else:
-        effective_indicator = sp.auto_indicator
-
-    # --- Rating bestimmen ---
-    rating = classify_indicator(effective_indicator)
+    # --- Ergebnis ---
+    ok = s_vorh <= s_zul
 
     return {
-        "floor_area": floor_area,
-        "window_area_total": window_area_total,
-        "win_n": win_n,
-        "win_s": win_s,
-        "win_e": win_e,
-        "win_w": win_w,
-        "g_value": g_value,
-        "shading_factor": Fc,
-        "q_int": q_int,
-        "Q_solar_W": Q_solar,
-        "Q_internal_W": Q_internal,
-        "auto_indicator_W_m2": indicator,
-        "effective_indicator_W_m2": effective_indicator,
-        "rating": rating,
+        "orientation": orientation,
+        "ngf_m2": round(ngf, 2),
+        "window_area_m2": round(a_win, 2),
+        "window_share": round(window_share, 4),
+        "g_value": round(g, 3),
+        "Fc": round(fc, 3),
+        "A_g_Fc": round(a_g_fc, 3),
+        "S_vorh": round(s_vorh, 3),
+        "S_zul": round(s_zul, 3),
+        "ok": ok,
     }
-
-
-def classify_indicator(indicator: float) -> str:
-    """
-    Simple verbal rating for the overheating indicator.
-    Thresholds can be tuned later.
-    """
-    if indicator < 10:
-        return "low overheating risk"
-    elif indicator < 20:
-        return "medium overheating risk"
-    return "high overheating risk"
