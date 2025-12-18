@@ -34,4 +34,6 @@ urlpatterns = [
         gwp_compensation_edit,
         name="gwp_compensation_edit",
     ),
+    path("envelope/", building_view.envelope_detail, name="envelope_detail"),
+    path("solar-gains/", building_view.solar_gains, name="solar_gains"),
 ]
