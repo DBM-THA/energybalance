@@ -1,0 +1,27 @@
+{# GWP Übersicht – ergänzt für Issue #17 (GWP Herstellung & Kompensation) #}
+
+{% extends "base.html" %}
+{% block content %}
+
+<h2>GWP Übersicht</h2>
+
+<p><strong>Gebäude:</strong> {{ building.name }}</p>
+
+<h3>06 – Herstellung</h3>
+{% if manufacturing %}
+    <p>GWP 300 neu: {{ manufacturing.kg300_new_gwp_total }}</p>
+    <p>GWP 400 neu: {{ manufacturing.kg400_new_gwp_total }}</p>
+{% else %}
+    <p>Noch keine Daten. <a href="{% url 'gwp_manufacturing_edit' building.id %}">Jetzt eingeben</a></p>
+{% endif %}
+
+<h3>07 – Kompensation:</h3>
+{% if compensation %}
+    <p>Fernwärme: {{ compensation.heat_district_kwh }} kWh</p>
+    <p>Strom: {{ compensation.electricity_kwh }} kWh</p>
+    <p><a href="{% url 'gwp_compensation_edit' building.id %}">Bearbeiten</a></p>
+{% else %}
+    <p>Noch keine Daten. <a href="{% url 'gwp_compensation_edit' building.id %}">Jetzt eingeben</a></p>
+{% endif %}
+
+{% endblock %}

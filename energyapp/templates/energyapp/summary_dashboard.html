@@ -1,0 +1,51 @@
+{% extends "energyapp/base.html" %}
+
+{% block content %}
+<h1 class="mt-4">01 Summary Dashboard</h1>
+
+<p>Hier kommt dein eigenes Projekt hin.</p>
+
+<div class="row mt-4">
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Energie Input</div>
+            <div class="card-body">
+                {% if energy_input %}
+                <table class="table table-sm">
+                    <tr><th>Endenergiebedarf</th><td>{{ energy_input.endenergiebedarf }}</td></tr>
+                    <tr><th>Klimaregion</th><td>{{ energy_input.klimaregion }}</td></tr>
+                    <tr><th>Orientierung</th><td>{{ energy_input.orientierung }}</td></tr>
+                    <tr><th>Neigung</th><td>{{ energy_input.neigung }}</td></tr>
+                    <tr><th>PV-Fläche</th><td>{{ energy_input.pv_flaeche }} m²</td></tr>
+                </table>
+                {% else %}
+                <p>Noch keine Eingaben vorhanden.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Energie Output</div>
+            <div class="card-body">
+                {% if energy_results %}
+                <table class="table table-striped table-sm">
+                    {% for key, value in energy_results.items %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <p>Noch keine Ergebnisse.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
