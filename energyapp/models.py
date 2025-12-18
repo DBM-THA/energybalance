@@ -191,47 +191,20 @@ class GwpManufacturing(models.Model):
         related_name="gwp_manufacturing",
     )
 
-    # GWP Herstellung gesamt [kg CO2] – aus Excel 06
-    kg300_new_gwp_total = models.FloatField("KG300 neu: GWP gesamt [kg]", default=0)
-    kg300_existing_gwp_total = models.FloatField("KG300 Bestand: GWP gesamt [kg]", default=0)
-    kg400_new_gwp_total = models.FloatField("KG400 neu: GWP gesamt [kg]", default=0)
-    kg400_existing_gwp_total = models.FloatField("KG400 Bestand: GWP gesamt [kg]", default=0)
 
-    # Nutzungsdauern [a]
-    kg300_new_service_life = models.FloatField("KG300 neu: Nutzungsdauer [a]", default=50)
-    kg300_existing_service_life = models.FloatField("KG300 Bestand: Nutzungsdauer [a]", default=30)
-    kg400_new_service_life = models.FloatField("KG400 neu: Nutzungsdauer [a]", default=25)
-    kg400_existing_service_life = models.FloatField("KG400 Bestand: Nutzungsdauer [a]", default=20)
+    # USER INPUT (Excel 06, Spalte G)
+    new_components_gwp = models.FloatField("Herstellung neue Bauteile [kg]", default=0)
+    existing_components_gwp = models.FloatField("Herstellung Bestandsbauteile [kg]", default=0)
+    service_life_years = models.FloatField("Nutzungsdauer [a]", default=50)
 
-    # abgeleitete Werte (nicht speichern, nur @property)
+    # BERECHNET (nicht speichern!)
     @property
-    def grey_new_kg300_per_year(self):
-        return self.kg300_new_gwp_total / self.kg300_new_service_life if self.kg300_new_service_life else 0
+    def new_per_year(self):
+        return self.new_components_gwp / self.service_life_years if self.service_life_years else 0
 
     @property
-    def grey_existing_kg300_per_year(self):
-        return self.kg300_existing_gwp_total / self.kg300_existing_service_life if self.kg300_existing_service_life else 0
-
-    @property
-    def grey_new_kg400_per_year(self):
-        return self.kg400_new_gwp_total / self.kg400_new_service_life if self.kg400_new_service_life else 0
-
-    @property
-    def grey_existing_kg400_per_year(self):
-        return self.kg400_existing_gwp_total / self.kg400_existing_service_life if self.kg400_existing_service_life else 0
-
-    @property
-    def manufacturing_total_without_existing(self):
-        return self.kg300_new_gwp_total + self.kg400_new_gwp_total
-
-    @property
-    def manufacturing_total_with_existing(self):
-        return (
-            self.kg300_new_gwp_total
-            + self.kg400_new_gwp_total
-            + self.kg300_existing_gwp_total
-            + self.kg400_existing_gwp_total
-        )
+    def existing_per_year(self):
+        return self.existing_components_gwp / self.service_life_years if self.service_life_years else 0
 
 # ============================
 # GROUP 7: GWP - Kompensation
@@ -248,77 +221,49 @@ class GwpCompensation(models.Model):
         related_name="compensation",
     )
 
-    # Endenergie [kWh/a]
-    heat_district_kwh = models.FloatField("Fernwärme [kWh/a]", default=0)
-    gas_kwh = models.FloatField("Gas [kWh/a]", default=0)
-    electricity_kwh = models.FloatField("Strom [kWh/a]", default=0)
 
-    # Emissionsfaktoren [kg/kWh]
-    factor_heat = models.FloatField("Faktor Fernwärme [kg/kWh]", default=0.28)
-    factor_gas = models.FloatField("Faktor Gas [kg/kWh]", default=0.201)
-    factor_electricity = models.FloatField("Faktor Strom [kg/kWh]", default=0.3538)
+    # USER INPUT (Excel 07, Spalte G) – Endenergie [kWh/a]
+    heat_district_regen_kwh = models.FloatField("Fernwärme regenerativ [kWh/a]", default=0)
+    heat_district_avg_kwh   = models.FloatField("Fernwärme durchschnitt [kWh/a]", default=0)
+    gas_kwh                 = models.FloatField("Gas [kWh/a]", default=0)
+    electricity_kwh         = models.FloatField("Strom [kWh/a]", default=0)
 
-    # PV
-    pv_yield_kwh = models.FloatField("PV-Ertrag [kWh/a]", default=0)
-    pv_factor = models.FloatField("PV-Faktor [kg/kWh]", default=-0.3538)
+    # Faktoren (nicht in DB speichern – NICHT user input)
+    FACTOR_HEAT = 0.28
+    FACTOR_GAS = 0.201
+    FACTOR_ELECTRICITY = 0.3538
 
-    # Nutzungs-Emissionen
+    # --- Nutzungs-Emissionen (wie Excel 07 Schritt 1) ---
     @property
-    def gwp_heat_district(self):
-        return self.heat_district_kwh * self.factor_heat
+    def gwp_heat_district_regen(self):
+        return self.heat_district_regen_kwh * self.FACTOR_HEAT
+
+    @property
+    def gwp_heat_district_avg(self):
+        return self.heat_district_avg_kwh * self.FACTOR_HEAT
 
     @property
     def gwp_gas(self):
-        return self.gas_kwh * self.factor_gas
+        return self.gas_kwh * self.FACTOR_GAS
 
     @property
     def gwp_electricity(self):
-        return self.electricity_kwh * self.factor_electricity
+        return self.electricity_kwh * self.FACTOR_ELECTRICITY
 
-    @property
-    def gwp_pv(self):
-        return self.pv_yield_kwh * self.pv_factor   # i.d.R. negativ
-
-    # Summen wie in Excel 07
+    # --- Summen (wie Excel 07 "Summe ohne/mit Bestandsbauteilen") ---
     @property
     def sum_without_existing(self):
         return (
-            self.gwp_heat_district
+            self.gwp_heat_district_regen
+            + self.gwp_heat_district_avg
             + self.gwp_gas
             + self.gwp_electricity
-            + self.manufacturing.grey_new_kg300_per_year
-            + self.manufacturing.grey_new_kg400_per_year
+            + self.manufacturing.new_per_year
         )
 
     @property
     def sum_with_existing(self):
-        return (
-            self.sum_without_existing
-            + self.manufacturing.grey_existing_kg300_per_year
-            + self.manufacturing.grey_existing_kg400_per_year
-        )
-
-    @property
-    def operation_balance(self):
-        # Bilanz Betrieb: nur Nutzung + PV
-        return (
-            self.gwp_heat_district
-            + self.gwp_gas
-            + self.gwp_electricity
-            + self.gwp_pv
-        )
-
-    @property
-    def years_to_compensation_without_existing(self):
-        if self.operation_balance >= 0:
-            return None
-        return self.manufacturing.manufacturing_total_without_existing / abs(self.operation_balance)
-
-    @property
-    def years_to_compensation_with_existing(self):
-        if self.operation_balance >= 0:
-            return None
-        return self.manufacturing.manufacturing_total_with_existing / abs(self.operation_balance)
+        return self.sum_without_existing + self.manufacturing.existing_per_year
 
 # ============================
 # GROUP 8: Load Profile

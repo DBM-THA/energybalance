@@ -62,27 +62,18 @@ class GwpManufacturingForm(forms.ModelForm):
     class Meta:
         model = GwpManufacturing
         fields = [
-            "kg300_new_gwp_total",
-            "kg300_existing_gwp_total",
-            "kg400_new_gwp_total",
-            "kg400_existing_gwp_total",
-            "kg300_new_service_life",
-            "kg300_existing_service_life",
-            "kg400_new_service_life",
-            "kg400_existing_service_life",
+            "new_components_gwp",
+            "existing_components_gwp",
+            "service_life_years",
         ]
-
 
 class GwpCompensationForm(forms.ModelForm):
     class Meta:
         model = GwpCompensation
         fields = [
-            "heat_district_kwh",
+            "heat_district_regen_kwh",
+            "heat_district_avg_kwh",
             "gas_kwh",
             "electricity_kwh",
-            "factor_heat",
-            "factor_gas",
-            "factor_electricity",
-            "pv_yield_kwh",
-            "pv_factor",
         ]
+
