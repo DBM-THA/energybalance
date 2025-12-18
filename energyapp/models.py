@@ -182,12 +182,88 @@ class Layer(models.Model):
 # ============================
 
 # ============================
-# GROUP 6: PV
+# GROUP 6: GWP - Herstellung
 # ============================
+class GwpManufacturing(models.Model):
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="gwp_manufacturing",
+    )
+
+
+    # USER INPUT (Excel 06, Spalte G)
+    new_components_gwp = models.FloatField("Herstellung neue Bauteile [kg]", default=0)
+    existing_components_gwp = models.FloatField("Herstellung Bestandsbauteile [kg]", default=0)
+    service_life_years = models.FloatField("Nutzungsdauer [a]", default=50)
+
+    # BERECHNET (nicht speichern!)
+    @property
+    def new_per_year(self):
+        return self.new_components_gwp / self.service_life_years if self.service_life_years else 0
+
+    @property
+    def existing_per_year(self):
+        return self.existing_components_gwp / self.service_life_years if self.service_life_years else 0
 
 # ============================
-# GROUP 7: GWP
+# GROUP 7: GWP - Kompensation
 # ============================
+class GwpCompensation(models.Model):
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="gwp_compensation",
+    )
+    manufacturing = models.OneToOneField(
+        GwpManufacturing,
+        on_delete=models.CASCADE,
+        related_name="compensation",
+    )
+
+
+    # USER INPUT (Excel 07, Spalte G) – Endenergie [kWh/a]
+    heat_district_regen_kwh = models.FloatField("Fernwärme regenerativ [kWh/a]", default=0)
+    heat_district_avg_kwh   = models.FloatField("Fernwärme durchschnitt [kWh/a]", default=0)
+    gas_kwh                 = models.FloatField("Gas [kWh/a]", default=0)
+    electricity_kwh         = models.FloatField("Strom [kWh/a]", default=0)
+
+    # Faktoren (nicht in DB speichern – NICHT user input)
+    FACTOR_HEAT = 0.28
+    FACTOR_GAS = 0.201
+    FACTOR_ELECTRICITY = 0.3538
+
+    # --- Nutzungs-Emissionen (wie Excel 07 Schritt 1) ---
+    @property
+    def gwp_heat_district_regen(self):
+        return self.heat_district_regen_kwh * self.FACTOR_HEAT
+
+    @property
+    def gwp_heat_district_avg(self):
+        return self.heat_district_avg_kwh * self.FACTOR_HEAT
+
+    @property
+    def gwp_gas(self):
+        return self.gas_kwh * self.FACTOR_GAS
+
+    @property
+    def gwp_electricity(self):
+        return self.electricity_kwh * self.FACTOR_ELECTRICITY
+
+    # --- Summen (wie Excel 07 "Summe ohne/mit Bestandsbauteilen") ---
+    @property
+    def sum_without_existing(self):
+        return (
+            self.gwp_heat_district_regen
+            + self.gwp_heat_district_avg
+            + self.gwp_gas
+            + self.gwp_electricity
+            + self.manufacturing.new_per_year
+        )
+
+    @property
+    def sum_with_existing(self):
+        return self.sum_without_existing + self.manufacturing.existing_per_year
 
 # ============================
 # GROUP 8: Load Profile

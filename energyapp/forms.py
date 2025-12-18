@@ -100,3 +100,27 @@ class SummerStep2Form(forms.ModelForm):
 
 
 
+
+from django import forms
+from .models import GwpManufacturing, GwpCompensation
+
+
+class GwpManufacturingForm(forms.ModelForm):
+    class Meta:
+        model = GwpManufacturing
+        fields = [
+            "new_components_gwp",
+            "existing_components_gwp",
+            "service_life_years",
+        ]
+
+class GwpCompensationForm(forms.ModelForm):
+    class Meta:
+        model = GwpCompensation
+        fields = [
+            "heat_district_regen_kwh",
+            "heat_district_avg_kwh",
+            "gas_kwh",
+            "electricity_kwh",
+        ]
+
