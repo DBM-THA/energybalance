@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Energiebilanz: {{ project.name }}</h2>
+    <p>Standort: {{ project.standort }} | Nutzfläche: {{ project.ngf }} m²</p>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Ergebnis Lastgang (Zusammenfassung)</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <h5>Heizwärmebedarf</h5>
+                    <h2 class="text-danger">{{ results.annual_heating_demand }} kWh/a</h2>
+                </div>
+                <div class="col-md-3">
+                    <h5>Spezifisch</h5>
+                    <h2 class="text-danger">{{ results.specific_demand }} kWh/m²a</h2>
+                </div>
+                <div class="col-md-3">
+                    <small>H_T (Transmission): {{ results.h_t }} W/K</small><br>
+                    <small>H_V (Lüftung): {{ results.h_v }} W/K</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>Monatsbilanz</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm text-center table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Monat</th>
+                    <th>Temp (°C)</th>
+                    <th class="table-warning">Q_Trans (kWh)</th>
+                    <th class="table-warning">Q_Lüft (kWh)</th>
+                    <th>Summe Verlust</th>
+                    <th class="table-success">Q_Intern (kWh)</th>
+                    <th class="table-success">Q_Solar (kWh)</th>
+                    <th>Summe Gewinn</th>
+                    <th>Verh. G/V</th>
+                    <th>Ausnutz. η</th>
+                    <th class="table-danger">Heizwärme (kWh)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in monthly_data %}
+                <tr>
+                    <td class="fw-bold">{{ row.month }}</td>
+                    <td>{{ row.temp }}</td>
+                    <td>{{ row.q_t }}</td>
+                    <td>{{ row.q_v }}</td>
+                    <td class="fw-bold">{{ row.q_loss }}</td>
+                    <td>{{ row.q_i }}</td>
+                    <td>{{ row.q_s }}</td>
+                    <td class="fw-bold">{{ row.q_gain }}</td>
+                    <td>{{ row.gamma }}</td>
+                    <td>{{ row.eta }}</td>
+                    <td class="bg-danger text-white fw-bold">{{ row.q_h }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="fw-bold table-active">
+                    <td>Summe</td>
+                    <td>-</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>{{ results.annual_heating_demand }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}
