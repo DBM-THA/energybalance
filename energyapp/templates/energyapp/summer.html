@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Sommerlicher Wärmeschutz</h1>
+
+{% if form %}
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Berechnen</button>
+  </form>
+{% else %}
+  <p>Bitte zuerst ein Gebäude anlegen.</p>
+{% endif %}
+
+{% if result %}
+  <hr>
+  <h2>Ergebnis</h2>
+  <ul>
+    <li>Orientierung: {{ result.orientation }}</li>
+    <li>Fensterflächenanteil: {{ result.window_share }}</li>
+    <li>S_vorh: {{ result.S_vorh }}</li>
+    <li>S_zul: {{ result.S_zul }}</li>
+    <li>
+      Sommerlicher Wärmeschutz:
+      <strong>
+        {% if result.ok %}✔ erfüllt{% else %}✖ nicht erfüllt{% endif %}
+      </strong>
+    </li>
+  </ul>
+{% endif %}
+{% endblock %}

@@ -1,4 +1,4 @@
-from .models import Building
+from .models import Building, SummerProtection
 from django import forms
 
 class SimpleBuildingForm(forms.ModelForm):
@@ -53,6 +53,53 @@ class BuildingForm(forms.ModelForm):
             "pv_specific_yield",
             "pv_self_consumption_share",
         ]
+        
+class SummerProtectionForm(forms.ModelForm):
+    class Meta:
+        model = SummerProtection
+        fields = [
+            "name",
+            "building",
+            "orientation",
+            "ngf_m2",
+            "window_area_m2",
+            "glazing_category",
+            "shading_type",
+            "climate_region",
+            "night_ventilation",
+            "passive_cooling",
+        ]
+        
+from .models import SummerProtection
+
+class SummerStep1Form(forms.ModelForm):
+    class Meta:
+        model = SummerProtection
+        fields = [
+            "building",
+            "orientation",
+            "ngf_m2",
+            "window_area_m2",
+        ]
+
+
+class SummerStep2Form(forms.ModelForm):
+    class Meta:
+        model = SummerProtection
+        fields = [
+            "building",
+            "orientation",
+            "ngf_m2",
+            "window_area_m2",
+            "glazing_category",
+            "shading_type",
+            "climate_region",
+            "night_ventilation",
+            "passive_cooling",
+        ]
+
+
+
 
 from django import forms
 from .models import GwpManufacturing, GwpCompensation
