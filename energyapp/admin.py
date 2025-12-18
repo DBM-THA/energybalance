@@ -154,3 +154,8 @@ class BuildingAdmin(admin.ModelAdmin):
         return f"{obj.result_Q_h:.0f}"
 
     result_Q_h_display.short_description = "Q_h [kWh/a]"
+
+from .models import GwpManufacturing, GwpCompensation
+
+admin.site.register(GwpManufacturing)
+admin.site.register(GwpCompensation)

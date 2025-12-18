@@ -1,5 +1,7 @@
 from django.urls import path
 from .views import building_view
+from energyapp.views.gwp_manufacturing_view import gwp_manufacturing_edit, gwp_overview
+from energyapp.views.gwp_compensation_view import gwp_compensation_edit
 
 urlpatterns = [
     path("", building_view.dashboard, name="dashboard"),
@@ -17,6 +19,21 @@ urlpatterns = [
     path("buildings/<int:pk>/result/pdf/", building_view.building_result_pdf, name="building_result_pdf"),
     path("summary-dashboard/", building_view.summary_dashboard, name="summary_dashboard"),
     path("internal-gains/", building_view.internal_gains, name="internal_gains"),
+    path(
+        "buildings/<int:building_id>/gwp/",
+        gwp_overview,
+        name="gwp_overview",
+    ),
+    path(
+        "buildings/<int:building_id>/gwp/herstellung/",
+        gwp_manufacturing_edit,
+        name="gwp_manufacturing_edit",
+    ),
+    path(
+        "buildings/<int:building_id>/gwp/kompensation/",
+        gwp_compensation_edit,
+        name="gwp_compensation_edit",
+    ),
     path("envelope/", building_view.envelope_detail, name="envelope_detail"),
     path("solar-gains/", building_view.solar_gains, name="solar_gains"),
 ]
