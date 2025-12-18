@@ -191,6 +191,7 @@ class GwpManufacturing(models.Model):
         related_name="gwp_manufacturing",
     )
 
+
     # USER INPUT (Excel 06, Spalte G)
     new_components_gwp = models.FloatField("Herstellung neue Bauteile [kg]", default=0)
     existing_components_gwp = models.FloatField("Herstellung Bestandsbauteile [kg]", default=0)
@@ -214,12 +215,12 @@ class GwpCompensation(models.Model):
         on_delete=models.CASCADE,
         related_name="gwp_compensation",
     )
-
     manufacturing = models.OneToOneField(
         GwpManufacturing,
         on_delete=models.CASCADE,
         related_name="compensation",
     )
+
 
     # USER INPUT (Excel 07, Spalte G) – Endenergie [kWh/a]
     heat_district_regen_kwh = models.FloatField("Fernwärme regenerativ [kWh/a]", default=0)

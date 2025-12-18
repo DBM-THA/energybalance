@@ -67,8 +67,6 @@ class GwpManufacturingForm(forms.ModelForm):
             "service_life_years",
         ]
 
-
-
 class GwpCompensationForm(forms.ModelForm):
     class Meta:
         model = GwpCompensation
