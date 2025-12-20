@@ -40,13 +40,13 @@
                 <!-- Bauteiltyp -->
                 <div class="mb-3">
                     <label class="form-label">Bauteiltyp</label>
-                    {{ form.building_part|as_widget:class="form-select" }}
+                    {{ form.building_part }}
                 </div>
 
                 <!-- Name -->
                 <div class="mb-3">
                     <label class="form-label">Bezeichnung</label>
-                    {{ form.name|as_widget:class="form-control" }}
+                    {{ form.name }}
                 </div>
 
                 <!-- Umschalter -->
@@ -60,7 +60,7 @@
                 <!-- Externer U-Wert -->
                 <div id="external_u_value_block" class="mb-3">
                     <label class="form-label">Externer U-Wert (W/m²K)</label>
-                    {{ form.u_value_external|as_widget:class="form-control" }}
+                    {{ form.u_value_external }}
                 </div>
 
             </div>
@@ -87,12 +87,12 @@
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Schicht-Typ</label>
-                                    {{ layer_form.layer_type|as_widget:class="form-select layer-type" }}
+                                    {{ layer_form.layer_type }}
                                 </div>
 
                                 <div class="col-md-8 mb-3">
                                     <label class="form-label">Name</label>
-                                    {{ layer_form.name|as_widget:class="form-control" }}
+                                    {{ layer_form.name }}
                                 </div>
                             </div>
 
@@ -100,11 +100,11 @@
                             <div class="row layer-material-fields">
                                 <div class="col-md-4 mb-3">
                                     <label>Dicke d (m)</label>
-                                    {{ layer_form.thickness|as_widget:class="form-control" }}
+                                    {{ layer_form.thickness }}
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label>Wärmeleitfähigkeit λ (W/mK)</label>
-                                    {{ layer_form.lambda_value|as_widget:class="form-control" }}
+                                    {{ layer_form.lambda_value }}
                                 </div>
                             </div>
 
@@ -112,7 +112,7 @@
                             <div class="row layer-rvalue-field">
                                 <div class="col-md-4 mb-3">
                                     <label>Widerstand R (m²K/W)</label>
-                                    {{ layer_form.R_value|as_widget:class="form-control" }}
+                                    {{ layer_form.R_value }}
                                 </div>
                             </div>
 

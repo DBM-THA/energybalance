@@ -7,8 +7,8 @@
     <div>
         <h1 class="page-header-title">{{ building.name }}</h1>
         <p class="page-header-subtitle">
-            Heizwärmebedarf: {{ building.result_Q_h|floatformat:0 }} kWh/a ·
-            Grundfläche: {{ building.result_floor_area|floatformat:0 }} m²
+            Heizwärmebedarf: {{ building.result_Q_h|default:0|floatformat:0 }} kWh/a ·
+            Grundfläche: {{ building.result_floor_area|default:0|floatformat:0 }} m²
         </p>
     </div>
     <div class="page-header-actions">
@@ -31,10 +31,10 @@
             <div class="card-header">Geometrie</div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
-                    <li>Grundfläche: {{ building.result_floor_area|floatformat:1 }} m²</li>
-                    <li>Dachfläche: {{ building.result_roof_area|floatformat:1 }} m²</li>
-                    <li>Opake Wandfläche: {{ building.result_opaque_wall_area|floatformat:1 }} m²</li>
-                    <li>Fensterfläche gesamt: {{ building.result_window_area|floatformat:1 }} m²</li>
+                    <li>Grundfläche: {{ building.result_floor_area|default:0|floatformat:1 }} m²</li>
+                    <li>Dachfläche: {{ building.result_roof_area|default:0|floatformat:1 }} m²</li>
+                    <li>Opake Wandfläche: {{ building.result_opaque_wall_area|default:0|floatformat:1 }} m²</li>
+                    <li>Fensterfläche gesamt: {{ building.result_window_area|default:0|floatformat:1 }} m²</li>
                 </ul>
             </div>
         </div>
@@ -46,8 +46,8 @@
             <div class="card-header">Wärmeverlustkoeffizienten</div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
-                    <li>H<sub>T</sub> (Transmission): {{ building.result_H_T|floatformat:1 }} W/K</li>
-                    <li>H<sub>V</sub> (Lüftung): {{ building.result_H_V|floatformat:1 }} W/K</li>
+                    <li>H<sub>T</sub> (Transmission): {{ building.result_H_T|default:0|floatformat:1 }} W/K</li>
+                    <li>H<sub>V</sub> (Lüftung): {{ building.result_H_V|default:0|floatformat:1 }} W/K</li>
                 </ul>
             </div>
         </div>
@@ -61,7 +61,7 @@
                 <p class="mb-1">
                     Q<sub>h</sub> = Q<sub>V</sub> + Q<sub>T</sub> − Q<sub>I</sub> − Q<sub>S</sub>
                 </p>
-                <h4 class="mb-0">{{ building.result_Q_h|floatformat:0 }} kWh/a</h4>
+                <h4 class="mb-0">{{ building.result_Q_h|default:0|floatformat:0 }} kWh/a</h4>
             </div>
         </div>
     </div>
@@ -74,10 +74,10 @@
             <div class="card-header">Energiegrößen jährlich</div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
-                    <li>Q<sub>T</sub> (Transmissionsverluste): {{ building.result_Q_T|floatformat:0 }} kWh/a</li>
-                    <li>Q<sub>V</sub> (Lüftungsverluste): {{ building.result_Q_V|floatformat:0 }} kWh/a</li>
-                    <li>Q<sub>I</sub> (interne Gewinne): −{{ building.result_Q_I|floatformat:0 }} kWh/a</li>
-                    <li>Q<sub>S</sub> (solare Gewinne): −{{ building.result_Q_S|floatformat:0 }} kWh/a</li>
+                    <li>Q<sub>T</sub> (Transmissionsverluste): {{ building.result_Q_T|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Q<sub>V</sub> (Lüftungsverluste): {{ building.result_Q_V|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Q<sub>I</sub> (interne Gewinne): −{{ building.result_Q_I|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Q<sub>S</sub> (solare Gewinne): −{{ building.result_Q_S|default:0|floatformat:0 }} kWh/a</li>
                 </ul>
             </div>
         </div>
@@ -89,10 +89,10 @@
             <div class="card-header">Solare Gewinne nach Orientierung</div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
-                    <li>Nord: {{ building.result_Q_S_n|floatformat:0 }} kWh/a</li>
-                    <li>Ost: {{ building.result_Q_S_e|floatformat:0 }} kWh/a</li>
-                    <li>Süd: {{ building.result_Q_S_s|floatformat:0 }} kWh/a</li>
-                    <li>West: {{ building.result_Q_S_w|floatformat:0 }} kWh/a</li>
+                    <li>Nord: {{ building.result_Q_S_n|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Ost: {{ building.result_Q_S_e|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Süd: {{ building.result_Q_S_s|default:0|floatformat:0 }} kWh/a</li>
+                    <li>West: {{ building.result_Q_S_w|default:0|floatformat:0 }} kWh/a</li>
                 </ul>
             </div>
         </div>
@@ -106,9 +106,9 @@
             <div class="card-header">PV-Bilanz</div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
-                    <li>PV-Ertrag gesamt: {{ building.result_Q_PV_total|floatformat:0 }} kWh/a</li>
-                    <li>PV Eigenverbrauch (Q<sub>PV,on</sub>): {{ building.result_Q_PV_on|floatformat:0 }} kWh/a</li>
-                    <li>PV Überschuss (Q<sub>PV,off</sub>): {{ building.result_Q_PV_off|floatformat:0 }} kWh/a</li>
+                    <li>PV-Ertrag gesamt: {{ building.result_Q_PV_total|default:0|floatformat:0 }} kWh/a</li>
+                    <li>PV Eigenverbrauch (Q<sub>PV,on</sub>): {{ building.result_Q_PV_on|default:0|floatformat:0 }} kWh/a</li>
+                    <li>PV Überschuss (Q<sub>PV,off</sub>): {{ building.result_Q_PV_off|default:0|floatformat:0 }} kWh/a</li>
                 </ul>
             </div>
         </div>
