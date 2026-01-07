@@ -169,6 +169,48 @@ class Layer(models.Model):
     def __str__(self):
         return f"{self.name} ({self.layer_type})"
 
+    from django.db import models
+
+    class BuildingPart(models.Model):
+        building_part = models.CharField(max_length=50)
+        name = models.CharField(max_length=100)
+
+        use_custom_layers = models.BooleanField(default=False)
+
+        u_value_external = models.FloatField(null=True, blank=True)
+        u_value_calculated = models.FloatField(null=True, blank=True)
+
+        def calculate_u_value(self):
+            r_sum = sum(layer.R_value for layer in self.layers.all() if layer.R_value)
+            return 1 / r_sum if r_sum > 0 else None
+
+        def save(self, args, **kwargs):
+            if self.use_custom_layers:
+                self.u_value_calculated = self.calculate_u_value()
+            else:
+                self.u_value_calculated = self.u_value_external
+            super().save(args, kwargs)
+
+    class Layer(models.Model):
+        building_part = models.ForeignKey(
+            BuildingPart,
+            related_name="layers",
+            on_delete=models.CASCADE
+        )
+
+        layer_type = models.CharField(max_length=20)  # inside / layer / outside
+        name = models.CharField(max_length=100)
+
+        thickness = models.FloatField(null=True, blank=True)
+        lambda_value = models.FloatField(null=True, blank=True)
+
+        R_value = models.FloatField()
+
+        def save(self, *args, kwargs):
+            if self.layer_type == "layer" and self.thickness and self.lambda_value:
+                self.R_value = self.thickness / self.lambda_value
+            super().save(*args, **kwargs)
+
 # ============================
 # GROUP 3: Internal Gains
 # ============================

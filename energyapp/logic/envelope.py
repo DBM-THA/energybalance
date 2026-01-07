@@ -1,67 +1,59 @@
-<<<<<<< Updated upstream
-
-=======
-# envelope.py
-from django.db import models
-from django.forms import ModelForm, inlineformset_factory
 from django.shortcuts import render, redirect
-from django.views import View
+from django.forms import modelform_factory, inlineformset_factory
+from .models import BuildingPart, Layer
 
 
-
-# ---------------------------------------------------
-#  FORMS
-# ---------------------------------------------------
-
-class EnvelopeElementForm(ModelForm):
-    class Meta:
-        model = EnvelopeElement
-        fields = ["name", "use_custom_layers", "u_value_external"]
-
-
-class LayerForm(ModelForm):
-    class Meta:
-        model = Layer
-        fields = ["layer_type", "name", "thickness", "lambda_value", "R_value"]
-
+===== Formulare DIREKT HIER =====
+BuildingPartForm = modelform_factory(
+    BuildingPart,
+    fields=[
+        "building_part",
+        "name",
+        "use_custom_layers",
+        "u_value_external",
+    ]
+)
 
 LayerFormSet = inlineformset_factory(
-    EnvelopeElement,
+    BuildingPart,
     Layer,
-    form=LayerForm,
+    fields=[
+        "layer_type",
+        "name",
+        "thickness",
+        "lambda_value",
+        "R_value",
+    ],
     extra=3,
     can_delete=True
 )
 
 
-# ---------------------------------------------------
-#  VIEW
-# ---------------------------------------------------
-
-class EnvelopeCreateView(View):
-    template_name = "envelope/envelope_form.html"
-
-    def get(self, request):
-        form = EnvelopeElementForm()
-        formset = LayerFormSet()
-        return render(request, self.template_name, {"form": form, "formset": formset})
-
-    def post(self, request):
-        form = EnvelopeElementForm(request.POST)
+===== View =====
+def envelope(request):
+    if request.method == "POST":
+        form = BuildingPartForm(request.POST)
         formset = LayerFormSet(request.POST)
 
         if form.is_valid() and formset.is_valid():
-            element = form.save()
-            layers = formset.save(commit=False)
+            part = form.save()
+            formset.instance = part
+            formset.save()
 
-            for layer in layers:
-                layer.element = element
-                layer.save()
+            # 🔢 U-Wert berechnen
+            part.save()
 
-            # U-Wert berechnen
-            element.calculate_u_value()
+            return redirect("/")  # oder Zielseite
 
-            return redirect("envelope_success")  # muss in urls existieren
+    else:
+        form = BuildingPartForm()
+        formset = LayerFormSet()
 
-        return render(request, self.template_name, {"form": form, "formset": formset})
->>>>>>> Stashed changes
+    return render(
+        request,
+        "envelope.html",
+        {
+            "form": form,
+            "formset": formset,
+        }
+    )
