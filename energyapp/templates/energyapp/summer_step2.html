@@ -96,12 +96,30 @@
         <div class="summer-card">
           <h2>Eingaben</h2>
 
-          {% for field in form %}
-            <div class="summer-field">
-              {{ field.label_tag }}
-              {{ field }}
-            </div>
-          {% endfor %}
+         {% for field in form %}
+  {% if field.name == "shading_type" %}
+    <div class="summer-field">
+      <label style="display:flex; align-items:center; gap:8px;">
+        {{ field.label }}
+
+        <a href="{% url 'fc_info' %}"
+           title="Fc-Werte anzeigen"
+           style="text-decoration:none; font-size:0.9rem;"
+           target="_blank">
+          ❓
+        </a>
+      </label>
+
+      {{ field }}
+    </div>
+  {% else %}
+    <div class="summer-field">
+      {{ field.label_tag }}
+      {{ field }}
+    </div>
+  {% endif %}
+{% endfor %}
+
 
           <p class="auto-hint">
             Änderungen werden automatisch berechnet.
@@ -117,17 +135,13 @@
         <div class="summer-card">
           <h2>Klimazone (Referenz)</h2>
 
-          <img src="{% static 'img/klimazone.png' %}"
+          <img src="{% static 'img/klimazonen.png' %}"
                alt="Klimazonen"
                style="width:100%; border-radius:8px; border:1px solid #d0d5e0;">
 
           <hr style="margin:1rem 0;">
 
-          <h3 style="font-size:.95rem;">Fc-Werte (Sonnenschutz)</h3>
-
-          <img src="{% static 'img/fc-werte.png' %}"
-               alt="Fc-Werte"
-               style="width:100%; border-radius:8px; border:1px solid #d0d5e0;">
+         
         </div>
 
         <!-- Ergebnis -->
