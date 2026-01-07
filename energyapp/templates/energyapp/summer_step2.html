@@ -56,20 +56,10 @@
     background: #fbfcff;
   }
 
-  .summer-actions {
-    margin-top: 1.2rem;
-    text-align: center;
-  }
-
-  .summer-actions button {
-    padding: .55rem 1.6rem;
-    border-radius: 999px;
-    border: none;
-    background: #2563eb;
-    color: #fff;
-    font-size: .95rem;
-    font-weight: 600;
-    cursor: pointer;
+  .auto-hint {
+    font-size: .8rem;
+    color: #666;
+    margin-top: .4rem;
   }
 
   @media (max-width: 900px) {
@@ -87,7 +77,7 @@
       Sommerlicher Wärmeschutz – Schritt 2
     </h1>
     <p style="margin:.3rem 0 0 0; color:#666;">
-      Prüfung der Anforderungen gemäß Tabelle
+      Automatische Prüfung beim Ändern der Eingaben
     </p>
     <p style="margin:.4rem 0 0 0;">
       <a href="{% url 'summer_step1' %}">← zurück zu Schritt 1</a>
@@ -95,7 +85,7 @@
   </div>
 
   {% if form %}
-  <form method="post">
+  <form method="post" id="summer-form">
     {% csrf_token %}
 
     <div class="summer-layout">
@@ -104,52 +94,18 @@
       <div class="summer-column">
 
         <div class="summer-card">
-          <h2 style="margin:0 0 .7rem 0;">Eingaben – Schritt 2</h2>
+          <h2>Eingaben</h2>
 
-          <div class="summer-field">
-            {{ form.building.label_tag }}
-            {{ form.building }}
-          </div>
+          {% for field in form %}
+            <div class="summer-field">
+              {{ field.label_tag }}
+              {{ field }}
+            </div>
+          {% endfor %}
 
-          <div class="summer-field">
-            {{ form.orientation.label_tag }}
-            {{ form.orientation }}
-          </div>
-
-          <div class="summer-field">
-            {{ form.ngf_m2.label_tag }}
-            {{ form.ngf_m2 }}
-          </div>
-
-          <div class="summer-field">
-            {{ form.window_area_m2.label_tag }}
-            {{ form.window_area_m2 }}
-          </div>
-
-          <div class="summer-field">
-            {{ form.glazing_category.label_tag }}
-            {{ form.glazing_category }}
-          </div>
-
-          <div class="summer-field">
-            {{ form.shading_type.label_tag }}
-            {{ form.shading_type }}
-          </div>
-
-          <div class="summer-field">
-            {{ form.climate_region.label_tag }}
-            {{ form.climate_region }}
-          </div>
-
-          <div class="summer-field">
-            {{ form.night_ventilation.label_tag }}
-            {{ form.night_ventilation }}
-          </div>
-
-          <div class="summer-field">
-            {{ form.passive_cooling.label_tag }}
-            {{ form.passive_cooling }}
-          </div>
+          <p class="auto-hint">
+            Änderungen werden automatisch berechnet.
+          </p>
         </div>
 
       </div>
@@ -157,37 +113,26 @@
       <!-- ================= RIGHT COLUMN ================= -->
       <div class="summer-column">
 
-        <!-- 🔹 Klimazone -->
+        <!-- Klimazone -->
         <div class="summer-card">
-          <h2 style="margin:0 0 .7rem 0;">Klimazone (Referenz)</h2>
+          <h2>Klimazone (Referenz)</h2>
 
           <img src="{% static 'energyapp/img/klimazone.png' %}"
-               alt="Klimazonen Deutschland"
+               alt="Klimazonen"
                style="width:100%; border-radius:8px; border:1px solid #d0d5e0;">
-
-          <p style="font-size:.8rem; color:#666; margin-top:.4rem;">
-            Visual reference for climate regions.
-          </p>
 
           <hr style="margin:1rem 0;">
 
-          <!-- 🔹 Fc-Werte -->
-          <h3 style="font-size:0.95rem; margin-bottom:.4rem;">
-            Fc-Werte (Sonnenschutz)
-          </h3>
+          <h3 style="font-size:.95rem;">Fc-Werte (Sonnenschutz)</h3>
 
           <img src="{% static 'energyapp/img/fc-werte.png' %}"
-               alt="Fc-Werte Tabelle"
+               alt="Fc-Werte"
                style="width:100%; border-radius:8px; border:1px solid #d0d5e0;">
-
-          <p style="font-size:.8rem; color:#666; margin-top:.4rem;">
-            Reference table for shading factor Fc according to specification.
-          </p>
         </div>
 
-        <!-- 🔹 Ergebnisse -->
+        <!-- Ergebnis -->
         <div class="summer-card">
-          <h2 style="margin:0 0 .7rem 0;">Ergebnisse</h2>
+          <h2>Ergebnis</h2>
 
           {% if result %}
             <p>S<sub>vorh</sub>: <b>{{ result.S_vorh }}</b></p>
@@ -195,32 +140,36 @@
             <p>Fc: <b>{{ result.Fc }}</b> | g: <b>{{ result.g_value }}</b></p>
 
             {% if result.ok %}
-              <p><b style="color:#2f7d2f;">✔ Anforderungen erfüllt</b></p>
+              <p style="color:#2f7d2f;"><b>✔ Anforderungen erfüllt</b></p>
             {% else %}
-              <p><b style="color:#b13131;">✖ Anforderungen nicht erfüllt</b></p>
+              <p style="color:#b13131;"><b>✖ Anforderungen nicht erfüllt</b></p>
             {% endif %}
           {% else %}
-            <p style="color:#666;">
-              Noch kein Ergebnis. Bitte Eingaben prüfen.
-            </p>
+            <p style="color:#666;">Noch keine Berechnung.</p>
           {% endif %}
         </div>
 
       </div>
     </div>
-
-    <div class="summer-actions">
-      <button type="submit">Schritt 2 berechnen</button>
-    </div>
-
   </form>
-
-  {% else %}
-    <div class="summer-card">
-      <h2>Hinweis</h2>
-      <p>Bitte zuerst ein Gebäude anlegen.</p>
-    </div>
   {% endif %}
 </div>
+
+<!-- 🔁 AUTO-BERECHNUNG BEIM ÄNDERN -->
+<script>
+  const form = document.getElementById("summer-form");
+  const inputs = form.querySelectorAll("input, select");
+
+  let timeout = null;
+
+  inputs.forEach(el => {
+    el.addEventListener("change", () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        form.submit();
+      }, 300);
+    });
+  });
+</script>
 
 {% endblock %}
