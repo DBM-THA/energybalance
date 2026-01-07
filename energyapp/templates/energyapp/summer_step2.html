@@ -1,26 +1,97 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 
 <style>
   body { background: #f5f7fb; }
-  .summer-wrapper { max-width: 1100px; margin: 1.5rem auto 3rem auto; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-  .summer-header { text-align:center; margin-bottom: 1.2rem; }
-  .summer-layout { display:flex; gap:2rem; align-items:flex-start; }
-  .summer-column { flex:1; }
-  .summer-card { border-radius:10px; padding:1rem 1.3rem; margin-bottom:1rem; background:#fff; box-shadow:0 0 0 1px #e0e4ee; }
-  .summer-field { margin-bottom: .7rem; }
-  .summer-field label { display:block; font-size:.8rem; margin-bottom:.2rem; color:#555; }
-  .summer-field input, .summer-field select { width:100%; box-sizing:border-box; padding:.4rem .5rem; font-size:.9rem; border-radius:6px; border:1px solid #d0d5e0; background:#fbfcff; }
-  .summer-actions { margin-top:1.2rem; text-align:center; }
-  .summer-actions button { padding:.55rem 1.6rem; border-radius:999px; border:none; background:#2563eb; color:#fff; font-size:.95rem; font-weight:600; cursor:pointer; }
-  @media (max-width: 900px) { .summer-layout { flex-direction: column; } }
+
+  .summer-wrapper {
+    max-width: 1100px;
+    margin: 1.5rem auto 3rem auto;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  .summer-header {
+    text-align: center;
+    margin-bottom: 1.2rem;
+  }
+
+  .summer-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+
+  .summer-column {
+    flex: 1;
+  }
+
+  .summer-card {
+    border-radius: 10px;
+    padding: 1rem 1.3rem;
+    margin-bottom: 1rem;
+    background: #ffffff;
+    box-shadow: 0 0 0 1px #e0e4ee;
+  }
+
+  .summer-field {
+    margin-bottom: .7rem;
+  }
+
+  .summer-field label {
+    display: block;
+    font-size: .8rem;
+    margin-bottom: .2rem;
+    color: #555;
+  }
+
+  .summer-field input,
+  .summer-field select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: .4rem .5rem;
+    font-size: .9rem;
+    border-radius: 6px;
+    border: 1px solid #d0d5e0;
+    background: #fbfcff;
+  }
+
+  .summer-actions {
+    margin-top: 1.2rem;
+    text-align: center;
+  }
+
+  .summer-actions button {
+    padding: .55rem 1.6rem;
+    border-radius: 999px;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    .summer-layout {
+      flex-direction: column;
+    }
+  }
 </style>
 
 <div class="summer-wrapper">
+
+  <!-- HEADER -->
   <div class="summer-header">
-    <h1 style="margin:0; font-size:1.6rem;">Sommerlicher Wärmeschutz – Schritt 2</h1>
-    <p style="margin:.3rem 0 0 0; color:#666;">Prüfen, ob der Raum die Anforderungen erfüllt</p>
-    <p style="margin:.4rem 0 0 0;"><a href="{% url 'summer_step1' %}">← zurück zu Schritt 1</a></p>
+    <h1 style="margin:0; font-size:1.6rem;">
+      Sommerlicher Wärmeschutz – Schritt 2
+    </h1>
+    <p style="margin:.3rem 0 0 0; color:#666;">
+      Prüfung der Anforderungen gemäß Tabelle
+    </p>
+    <p style="margin:.4rem 0 0 0;">
+      <a href="{% url 'summer_step1' %}">← zurück zu Schritt 1</a>
+    </p>
   </div>
 
   {% if form %}
@@ -28,47 +99,122 @@
     {% csrf_token %}
 
     <div class="summer-layout">
+
+      <!-- ================= LEFT COLUMN ================= -->
       <div class="summer-column">
+
         <div class="summer-card">
-          <h2 style="margin:0 0 .7rem 0;">Eingaben Schritt 2</h2>
+          <h2 style="margin:0 0 .7rem 0;">Eingaben – Schritt 2</h2>
 
-          <div class="summer-field">{{ form.building.label_tag }}{{ form.building }}</div>
-          <div class="summer-field">{{ form.orientation.label_tag }}{{ form.orientation }}</div>
-          <div class="summer-field">{{ form.ngf_m2.label_tag }}{{ form.ngf_m2 }}</div>
-          <div class="summer-field">{{ form.window_area_m2.label_tag }}{{ form.window_area_m2 }}</div>
+          <div class="summer-field">
+            {{ form.building.label_tag }}
+            {{ form.building }}
+          </div>
 
-          <div class="summer-field">{{ form.glazing_category.label_tag }}{{ form.glazing_category }}</div>
-          <div class="summer-field">{{ form.shading_type.label_tag }}{{ form.shading_type }}</div>
+          <div class="summer-field">
+            {{ form.orientation.label_tag }}
+            {{ form.orientation }}
+          </div>
 
-          <div class="summer-field">{{ form.climate_region.label_tag }}{{ form.climate_region }}</div>
-          <div class="summer-field">{{ form.night_ventilation.label_tag }}{{ form.night_ventilation }}</div>
-          <div class="summer-field">{{ form.passive_cooling.label_tag }}{{ form.passive_cooling }}</div>
+          <div class="summer-field">
+            {{ form.ngf_m2.label_tag }}
+            {{ form.ngf_m2 }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.window_area_m2.label_tag }}
+            {{ form.window_area_m2 }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.glazing_category.label_tag }}
+            {{ form.glazing_category }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.shading_type.label_tag }}
+            {{ form.shading_type }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.climate_region.label_tag }}
+            {{ form.climate_region }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.night_ventilation.label_tag }}
+            {{ form.night_ventilation }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.passive_cooling.label_tag }}
+            {{ form.passive_cooling }}
+          </div>
         </div>
+
       </div>
 
+      <!-- ================= RIGHT COLUMN ================= -->
       <div class="summer-column">
+
+        <!-- 🔹 Klimazone -->
+        <div class="summer-card">
+          <h2 style="margin:0 0 .7rem 0;">Klimazone (Referenz)</h2>
+
+          <img src="{% static 'energyapp/img/klimazone.png' %}"
+               alt="Klimazonen Deutschland"
+               style="width:100%; border-radius:8px; border:1px solid #d0d5e0;">
+
+          <p style="font-size:.8rem; color:#666; margin-top:.4rem;">
+            Visual reference for climate regions.
+          </p>
+
+          <hr style="margin:1rem 0;">
+
+          <!-- 🔹 Fc-Werte -->
+          <h3 style="font-size:0.95rem; margin-bottom:.4rem;">
+            Fc-Werte (Sonnenschutz)
+          </h3>
+
+          <img src="{% static 'energyapp/img/fc-werte.png' %}"
+               alt="Fc-Werte Tabelle"
+               style="width:100%; border-radius:8px; border:1px solid #d0d5e0;">
+
+          <p style="font-size:.8rem; color:#666; margin-top:.4rem;">
+            Reference table for shading factor Fc according to specification.
+          </p>
+        </div>
+
+        <!-- 🔹 Ergebnisse -->
         <div class="summer-card">
           <h2 style="margin:0 0 .7rem 0;">Ergebnisse</h2>
+
           {% if result %}
             <p>S<sub>vorh</sub>: <b>{{ result.S_vorh }}</b></p>
             <p>S<sub>zul</sub>: <b>{{ result.S_zul }}</b></p>
             <p>Fc: <b>{{ result.Fc }}</b> | g: <b>{{ result.g_value }}</b></p>
+
             {% if result.ok %}
-              <p><b style="color:#2f7d2f;">✔ erfüllt</b></p>
+              <p><b style="color:#2f7d2f;">✔ Anforderungen erfüllt</b></p>
             {% else %}
-              <p><b style="color:#b13131;">✖ nicht erfüllt</b></p>
+              <p><b style="color:#b13131;">✖ Anforderungen nicht erfüllt</b></p>
             {% endif %}
           {% else %}
-            <p style="color:#666;">Noch kein Ergebnis. Bitte berechnen.</p>
+            <p style="color:#666;">
+              Noch kein Ergebnis. Bitte Eingaben prüfen.
+            </p>
           {% endif %}
         </div>
+
       </div>
     </div>
 
     <div class="summer-actions">
       <button type="submit">Schritt 2 berechnen</button>
     </div>
+
   </form>
+
   {% else %}
     <div class="summer-card">
       <h2>Hinweis</h2>
