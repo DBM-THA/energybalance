@@ -43,3 +43,8 @@ def summer_view(request):
             "result": result,
         },
     )
+from django.shortcuts import render
+
+def fc_info(request):
+    return render(request, "energyapp/fc_info.html")
+
