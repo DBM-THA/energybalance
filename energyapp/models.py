@@ -172,23 +172,216 @@ class Layer(models.Model):
 # ============================
 # GROUP 3: Internal Gains
 # ============================
+class InternalGains(models.Model):
+    dummy = models.CharField(max_length=100)
 
 # ============================
 # GROUP 4: Ventilation
 # ============================
+class Ventilation(models.Model):
+    dummy = models.CharField(max_length=100)
+
 
 # ============================
 # GROUP 5: Lighting & Water
 # ============================
+class Lighting(models.Model):
+    dummy = models.CharField(max_length=100)
+
+class Water(models.Model):
+    dummy = models.CharField(max_length=100)
 
 # ============================
-# GROUP 6: PV
+# GROUP 6: GWP - Herstellung
 # ============================
+class GwpManufacturing(models.Model):
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="gwp_manufacturing",
+    )
+
+
+    # USER INPUT (Excel 06, Spalte G)
+    new_components_gwp = models.FloatField("Herstellung neue Bauteile [kg]", default=0)
+    existing_components_gwp = models.FloatField("Herstellung Bestandsbauteile [kg]", default=0)
+    service_life_years = models.FloatField("Nutzungsdauer [a]", default=50)
+
+    # BERECHNET (nicht speichern!)
+    @property
+    def new_per_year(self):
+        return self.new_components_gwp / self.service_life_years if self.service_life_years else 0
+
+    @property
+    def existing_per_year(self):
+        return self.existing_components_gwp / self.service_life_years if self.service_life_years else 0
 
 # ============================
-# GROUP 7: GWP
+# GROUP 7: GWP - Kompensation
 # ============================
+class GwpCompensation(models.Model):
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="gwp_compensation",
+    )
+    manufacturing = models.OneToOneField(
+        GwpManufacturing,
+        on_delete=models.CASCADE,
+        related_name="compensation",
+    )
+
+
+    # USER INPUT (Excel 07, Spalte G) – Endenergie [kWh/a]
+    heat_district_regen_kwh = models.FloatField("Fernwärme regenerativ [kWh/a]", default=0)
+    heat_district_avg_kwh   = models.FloatField("Fernwärme durchschnitt [kWh/a]", default=0)
+    gas_kwh                 = models.FloatField("Gas [kWh/a]", default=0)
+    electricity_kwh         = models.FloatField("Strom [kWh/a]", default=0)
+
+    # Faktoren (nicht in DB speichern – NICHT user input)
+    FACTOR_HEAT = 0.28
+    FACTOR_GAS = 0.201
+    FACTOR_ELECTRICITY = 0.3538
+
+    # --- Nutzungs-Emissionen (wie Excel 07 Schritt 1) ---
+    @property
+    def gwp_heat_district_regen(self):
+        return self.heat_district_regen_kwh * self.FACTOR_HEAT
+
+    @property
+    def gwp_heat_district_avg(self):
+        return self.heat_district_avg_kwh * self.FACTOR_HEAT
+
+    @property
+    def gwp_gas(self):
+        return self.gas_kwh * self.FACTOR_GAS
+
+    @property
+    def gwp_electricity(self):
+        return self.electricity_kwh * self.FACTOR_ELECTRICITY
+
+    # --- Summen (wie Excel 07 "Summe ohne/mit Bestandsbauteilen") ---
+    @property
+    def sum_without_existing(self):
+        return (
+            self.gwp_heat_district_regen
+            + self.gwp_heat_district_avg
+            + self.gwp_gas
+            + self.gwp_electricity
+            + self.manufacturing.new_per_year
+        )
+
+    @property
+    def sum_with_existing(self):
+        return self.sum_without_existing + self.manufacturing.existing_per_year
 
 # ============================
 # GROUP 8: Load Profile
 # ============================
+
+# ============================
+# GROUP 10: Summer Protection (Sommerlicher Wärmeschutz)
+# ============================
+class SummerProtection(models.Model):
+    name = models.CharField(
+        max_length=100,
+        default="Sommerlicher Wärmeschutz",
+        help_text="Name des Szenarios (z.B. 'Standard Sommerfall').",
+    )
+
+    building = models.ForeignKey(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="summer_protections",
+    )
+
+    # ----------------------------
+    # Critical room (Excel Schritt 1 & 2)
+    # ----------------------------
+    ORIENTATION_CHOICES = [
+        ("N", "Nord"),
+        ("E", "Ost"),
+        ("S", "Süd"),
+        ("W", "West"),
+    ]
+    orientation = models.CharField(
+        "Fassadenorientierung (kritischer Raum)",
+        max_length=1,
+        choices=ORIENTATION_CHOICES,
+        default="S",
+    )
+
+    ngf_m2 = models.FloatField(
+        "Nettogrundfläche Raum (NGF) [m²]",
+        default=30.0,
+    )
+
+    window_area_m2 = models.FloatField(
+        "Fensterfläche (kritischer Raum) [m²]",
+        default=0.0,
+    )
+
+    # ----------------------------
+    # Fixed categories for Fc lookup (your table)
+    # ----------------------------
+    GLAZING_CATEGORY_CHOICES = [
+        ("double", "zweifach"),
+        ("triple", "dreifach"),
+        ("solar", "Sonnenschutzglas (g ≤ 0.40)"),
+    ]
+    glazing_category = models.CharField(
+        "Verglasungskategorie",
+        max_length=20,
+        choices=GLAZING_CATEGORY_CHOICES,
+        default="double",
+    )
+
+    SHADING_TYPE_CHOICES = [
+        ("none", "ohne Sonnenschutz"),                      # Zeile 1
+        ("internal", "innenliegend / zwischen Scheiben"),   # Zeile 2
+        ("roller_closed", "Rollladen geschlossen"),         # 3.1
+        ("jalousie_45", "Jalousie 45°"),                    # 3.2.1
+        ("awning", "Markise"),                              # 3.3
+        ("overhang", "Vordach / Überhang"),                 # 3.4
+    ]
+    shading_type = models.CharField(
+        "Sonnenschutztyp (kritischer Raum)",
+        max_length=30,
+        choices=SHADING_TYPE_CHOICES,
+        default="none",
+    )
+
+    # ----------------------------
+    # Step 3 inputs (Excel)
+    # ----------------------------
+    CLIMATE_REGION_CHOICES = [
+        ("A", "Klimaregion A"),
+        ("B", "Klimaregion B"),
+        ("C", "Klimaregion C"),
+    ]
+    climate_region = models.CharField(
+        "Klimaregion",
+        max_length=1,
+        choices=CLIMATE_REGION_CHOICES,
+        default="B",
+    )
+
+    NIGHT_VENT_CHOICES = [
+        ("none", "keine"),
+        ("slight", "erhöht leicht"),
+        ("strong", "erhöht stark"),
+    ]
+    night_ventilation = models.CharField(
+        "Nachtlüftung",
+        max_length=10,
+        choices=NIGHT_VENT_CHOICES,
+        default="none",
+    )
+
+    passive_cooling = models.BooleanField(
+        "Passive Kühlung vorhanden",
+        default=False,
+    )
+
+    def __str__(self):
+        return f"{self.name} ({self.orientation}) – {self.building.name}"
