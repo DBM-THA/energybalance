@@ -1,0 +1,243 @@
+{% load static %}
+
+<!-- Bootstrap zuerst -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous">
+
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+<!doctype html>
+<html lang="de">
+<head>
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png">
+    <link rel="shortcut icon" href="/static/favicon/favicon.ico">
+
+    <meta charset="utf-8">
+    <title>Energiebilanz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --primary-dark: #0b5ed7;
+
+            --bg-page: #f3f5f8;
+            --bg-card: #ffffff;
+            --bg-card-header: #f8fafc;
+            --text-color: #1a1a1a;
+            --border-color: #e1e5eb;
+            --table-header-bg: #e9ecef;
+        }
+
+        /* Dark Mode Theme */
+        body.dark-mode {
+            /* deutlich dunklerer Hintergrund, aber hellere Karten */
+            --bg-page: #05070a;
+            --bg-card: #181b20;
+            --bg-card-header: #222733;
+
+            /* sehr heller Text für guten Kontrast */
+            --text-color: #f5f7fb;
+
+            /* sichtbarere Ränder und Tabellen-Header */
+            --border-color: #404858;
+            --table-header-bg: #262c38;
+
+        }
+
+        /* Text in Karten im Dark Mode deutlich heller erzwingen */
+        body.dark-mode .card,
+        body.dark-mode .card * {
+            color: #f0f3ff !important;
+        }
+
+        /* etwas kräftigere Schatten im Dark Mode */
+        body.dark-mode .card {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.75);
+        }
+
+        body.dark-mode .navbar {
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+        }
+
+
+        body.dark-mode .btn-outline-primary {
+            color: #6ea8ff !important;
+            border-color: #6ea8ff !important;
+        }
+
+        body.dark-mode .btn-primary {
+            background-color: #0d6efd !important;
+            border-color: #0a58ca !important;
+        }
+
+        /* Tabellen im Dark Mode besser lesbar machen */
+        body.dark-mode .table {
+            background-color: transparent;
+            color: #f0f3ff;
+        }
+
+        body.dark-mode .table thead th {
+            background-color: #262c38;
+            color: #f0f3ff;
+            border-color: #404858;
+        }
+
+        body.dark-mode .table-striped > tbody > tr:nth-of-type(odd),
+        body.dark-mode .table-striped > tbody > tr:nth-of-type(even) {
+            background-color: #181b20;   /* dunkle Zeilen */
+        }
+
+        body.dark-mode .table tbody td {
+            color: #f0f3ff;
+            border-color: #404858;
+        }
+
+        /* Spezielle Dark-Mode-Darstellung für die Gebäudeliste (/buildings/) */
+        body.dark-mode #building-table thead th {
+            background-color: #262c38 !important;
+            color: #f5f7ff !important;
+        }
+
+        body.dark-mode #building-table tbody tr {
+            background-color: #181b20 !important;   /* Grundfarbe Zeilen */
+        }
+
+        body.dark-mode #building-table tbody tr:nth-of-type(even) {
+            background-color: #1f232b !important;   /* jede 2. Zeile etwas heller */
+        }
+
+        body.dark-mode #building-table tbody td {
+            color: #f5f7ff !important;              /* Text hell */
+            border-color: #404858 !important;
+        }
+
+        body {
+            background: var(--bg-page);
+            color: var(--text-color);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+            border-radius: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .card-header {
+            background: var(--bg-card-header);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        table.table-sm th {
+            background: var(--table-header-bg);
+            color: var(--text-color);
+        }
+
+        table.table-sm td {
+            color: var(--text-color);
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}{% if dark_mode %} dark-mode{% else %} light-mode{% endif %}">
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">Energiebilanz</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                     <a class="nav-link" href="{% url 'summary_dashboard' %}">01 Summary Dashboard</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'building_create' %}">Neues Gebäude</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'building_list' %}">Gebäudeliste</a>
+                </li>
+            </ul>
+
+            <!-- Dark Mode Toggle -->
+            <button id="themeToggle" class="btn btn-sm btn-outline-light ms-auto">
+                🌙 Dark
+            </button>
+
+            <ul class="navbar-nav ms-3">
+
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/" target="_blank">Admin</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container page-wrapper">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+
+<!-- Chart.js für Diagramme -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% block extra_scripts %}{% endblock %}
+
+<script>
+    const toggleBtn = document.getElementById("themeToggle");
+    const body = document.body;
+
+    // Load stored theme
+    if (localStorage.getItem("theme") === "dark") {
+        body.classList.add("dark-mode");
+        toggleBtn.textContent = "☀️ Light";
+    }
+
+    toggleBtn.addEventListener("click", () => {
+        body.classList.toggle("dark-mode");
+
+        if (body.classList.contains("dark-mode")) {
+            localStorage.setItem("theme", "dark");
+            toggleBtn.textContent = "☀️ Light";
+        } else {
+            localStorage.setItem("theme", "light");
+            toggleBtn.textContent = "🌙 Dark";
+        }
+    });
+</script>
+
+</body>
+</html>

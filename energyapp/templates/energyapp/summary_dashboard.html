@@ -1,0 +1,828 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block extra_head %}
+<style>
+  /* Excel-Look */
+  :root{
+    --xl-bg: #e7f0df;         /* hellgrün */
+    --xl-grid: #d9d9d9;       /* Gridlines */
+    --xl-text: #111;
+    --xl-mid: #bfbfbf;        /* grau (Eingabe/Referenz) */
+    --xl-mid2:#a6a6a6;
+    --xl-bar: #557a2f;        /* dunkelgrün */
+    --xl-bar2:#dfead6;        /* section header hellgrün */
+    --xl-white:#fff;
+  }
+
+  /* Hauptbereich: Navbar aus Base bleibt, wir überschreiben nur Content-Look */
+  .xl-sheet-wrap{
+    background: var(--xl-bg);
+    padding: 18px 18px 40px;
+    border-radius: 10px;
+  }
+
+  .xl-title{
+    font-weight: 800;
+    letter-spacing: .5px;
+    margin: 4px 0 8px;
+    text-transform: uppercase;
+  }
+
+  .xl-desc{
+    font-size: 12px;
+    line-height: 1.35;
+    margin: 0 0 12px;
+    max-width: 1100px;
+  }
+
+  .xl-legend{
+    width: 520px;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 10px 0 18px;
+  }
+  .xl-legend td{
+    border: 1px solid var(--xl-grid);
+    padding: 6px 8px;
+    background: var(--xl-white);
+  }
+  .xl-legend .swatch{
+    width: 26px;
+    padding: 0;
+  }
+  .swatch.input{ background: var(--xl-mid); }
+  .swatch.ref{ background: #ffffff; }
+  .swatch.mid{ background: #cfe3bf; }
+  .swatch.final{ background: var(--xl-bar); }
+
+  .xl-meta{
+    width: 100%;
+    max-width: 1150px;
+    border-collapse: collapse;
+    margin: 0 0 14px;
+    font-size: 13px;
+  }
+  .xl-meta td{
+    border: 1px solid var(--xl-grid);
+    padding: 6px 8px;
+    background: var(--xl-white);
+  }
+  .xl-meta .label{ width: 160px; font-weight: 600; }
+  .xl-meta .value{
+    background: var(--xl-mid);
+    font-weight: 600;
+  }
+
+  .xl-section-title{
+    font-weight: 800;
+    font-style: italic;
+    margin: 18px 0 6px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 4px;
+    max-width: 1150px;
+  }
+
+  .xl-table{
+    width: 100%;
+    max-width: 1150px;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: var(--xl-white);
+  }
+  .xl-table th, .xl-table td{
+    border: 1px solid var(--xl-grid);
+    padding: 6px 8px;
+    vertical-align: middle;
+  }
+  .xl-table th{
+    background: var(--xl-white);
+    font-weight: 700;
+    text-align: left;
+  }
+  .xl-table .subhead{
+    background: var(--xl-white);
+    font-weight: 700;
+  }
+
+  .xl-table .num{
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* graue Ergebnis-/Referenzzellen */
+  .xl-table .refcell{
+    background: var(--xl-mid);
+  }
+
+  /* Eingabezellen (editierbar) */
+  .xl-input{
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+  }
+  .xl-input-wrap{
+    background: var(--xl-mid);
+    padding: 0;
+  }
+  .xl-input:focus{
+    outline: 2px solid #3b82f6;
+    border-radius: 3px;
+  }
+
+  /* Grüne Summenbalken */
+  .xl-sumrow td{
+    background: var(--xl-bar);
+    color: #fff;
+    font-weight: 800;
+    border-color: var(--xl-bar);
+  }
+  .xl-sumrow .sumlabel{
+    text-transform: none;
+    font-size: 16px;
+    letter-spacing: .3px;
+  }
+  .xl-sumrow .num{
+    font-size: 18px;
+  }
+  .xl-units td{
+    background: var(--xl-white);
+    color: #000;
+    font-weight: 700;
+    border-top: 0;
+  }
+
+  .xl-note{
+    font-size: 11px;
+    margin-top: 4px;
+    max-width: 1150px;
+  }
+
+  .xl-actions{
+    max-width: 1150px;
+    margin: 14px 0 0;
+    display: flex;
+    gap: 10px;
+  }
+
+  .xl-save{
+    background: var(--xl-bar);
+    border: 0;
+    color: #fff;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 8px;
+  }
+  .xl-save:hover{ filter: brightness(0.95); }
+
+  /* Darkmode aus base: wir erzwingen Excel-Look trotzdem */
+  body.dark-mode .xl-sheet-wrap{
+    background: var(--xl-bg) !important;
+    color: var(--xl-text) !important;
+  }
+  body.dark-mode .xl-sheet-wrap *{
+    color: var(--xl-text) !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="xl-sheet-wrap">
+
+  <div class="xl-title">01 ERGEBNIS ENERGIE</div>
+
+  <p class="xl-desc">
+    Auf dieser Seite ist eine Ergebnisübersicht für die Energie einzusehen. Es dient der Übersicht vorangeganener Berechnungen auf anderen Blättern.
+    In diesem Blatt können Kommentare hinzugefügt oder Werte eingegeben werden, die vorher bestimmt und nicht berechnet wurden.
+    Dieses Blatt dient daher zur Kontrolle und Anpassung, nicht zur Berechnung an sich.
+  </p>
+
+  <table class="xl-legend">
+    <tr>
+      <td class="swatch input"></td>
+      <td>Bitte in Felder mit dieser Farbe etwas eingeben, um ein Ergebnis zu erhalten.</td>
+    </tr>
+    <tr>
+      <td class="swatch ref"></td>
+      <td>Die Information wird entweder aus einer anderen Zelle / anderem Blatt bezogen oder kann selbst eingegeben werden</td>
+    </tr>
+    <tr>
+      <td class="swatch mid"></td>
+      <td>Zwischenergebnis</td>
+    </tr>
+    <tr>
+      <td class="swatch final"></td>
+      <td>Endergebnis</td>
+    </tr>
+  </table>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <table class="xl-meta">
+      <tr>
+        <td class="label">Projekt</td>
+        <td class="value">
+          <!-- Excel-Quelle: ='04 LASTGANG'!K12 -->
+          <input class="xl-input" type="text" name="project" value="{{ sheet.project|default:'' }}" style="text-align:left;">
+        </td>
+      </tr>
+      <tr>
+        <td class="label">Standort</td>
+        <td class="value">
+          <!-- Excel-Quelle: ='04 LASTGANG'!K13 -->
+          <input class="xl-input" type="text" name="location" value="{{ sheet.location|default:'' }}" style="text-align:left;">
+        </td>
+      </tr>
+    </table>
+
+    <div class="xl-section-title">Nutzenergie</div>
+
+    <table class="xl-table">
+      <tr>
+        <th style="width: 240px;">Energiedienstleistung</th>
+        <th style="width: 150px;">Arbeitsblatt</th>
+        <th style="width: 140px;" class="num">Energiebedarf<br><span style="font-weight:600;">kWh/a</span></th>
+        <th style="width: 140px;" class="num">spezifisch<br><span style="font-weight:600;">kWh/m²a</span></th>
+        <th style="width: 150px;">Vergleich Messung</th>
+        <th>Kommentar</th>
+      </tr>
+
+      <tr>
+        <td>Heizwärme</td>
+        <td>Monatsbilanz</td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='03 MONATSBILANZ'!O76 -> Mapping: building.result_Q_h -->
+          {{ calc.F22|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='03 MONATSBILANZ'!O77 (spezifisch) -> hier: F22/NGF_t -->
+          {{ calc.G22|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>Passivhaus &lt;= 15 kWh/m²a (Vergleich mit LEG problematisch)</i></td>
+      </tr>
+
+      <tr>
+        <td style="color:#777;">Heizwärme Beleuchtung</td>
+        <td style="color:#777;">n. v.</td>
+        <td class="num refcell" style="color:#777;">0</td>
+        <td class="num refcell" style="color:#777;">0,00</td>
+        <td class="refcell" style="color:#777;">5,00</td>
+        <td class="refcell"><i>nicht berücksichtigt</i></td>
+      </tr>
+
+      <tr>
+        <td>Trinkwarmwasser</td>
+        <td>Licht + Wasser</td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='12 LICHT UND WASSER'!L56 -> aktuell nicht im Modell, default 0 -->
+          {{ calc.F24|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='12 LICHT UND WASSER'!L56/'04 LASTGANG'!E21 -> hier: / NGF_t -->
+          {{ calc.G24|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>Standardwert 4108-6 Wohnbau: 12,5 kWh/m²a</i></td>
+      </tr>
+
+      <tr>
+        <td>Luftförderung</td>
+        <td>Luftförderung</td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='11 LUFTFÖRDERUNG'!E97 -> aktuell nicht im Modell, default 0 -->
+          {{ calc.F25|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='11 LUFTFÖRDERUNG'!E97/'04 LASTGANG'!E21 -> / NGF_t -->
+          {{ calc.G25|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td style="color:#777;">Kälte</td>
+        <td style="color:#777;">n. v.</td>
+        <td class="num refcell" style="color:#777;">0</td>
+        <td class="num refcell" style="color:#777;">0,00</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>keine aktive Kühlung</i></td>
+      </tr>
+
+      <tr>
+        <td>Beleuchtung</td>
+        <td>Licht + Wasser</td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='12 LICHT UND WASSER'!L36 -> aktuell nicht im Modell, default 0 -->
+          {{ calc.F27|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='12 LICHT UND WASSER'!L36/'04 LASTGANG'!E21 -> / NGF_t -->
+          {{ calc.G27|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td style="color:#777;">Sonstiges</td>
+        <td style="color:#777;">n. v.</td>
+        <td class="num refcell" style="color:#777;">0</td>
+        <td class="num refcell" style="color:#777;">0,00</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>nicht berücksichtigt</i></td>
+      </tr>
+
+      <tr>
+        <td>Nutzer (Prozess)</td>
+        <td>n. v.</td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='10 INNERE WÄRMEQUELLEN'!N49 -> aktuell nicht im Modell, default 0 -->
+          {{ calc.F29|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: ='10 INNERE WÄRMEQUELLEN'!O49 -> hier: / NGF_t -->
+          {{ calc.G29|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr class="xl-sumrow">
+        <td class="sumlabel" colspan="2">Nutzenergiebedarf</td>
+        <td class="num">
+          <!-- Excel-Formel: =SUM(F22:F29) -->
+          {{ calc.F30|de_number:0 }}
+        </td>
+        <td class="num">
+          <!-- Excel-Formel: =SUM(G22:G29) -->
+          {{ calc.G30|de_number:2 }}
+        </td>
+        <td colspan="2"></td>
+      </tr>
+
+      <tr class="xl-units">
+        <td colspan="2"></td>
+        <td class="num">kWh/a</td>
+        <td class="num">kWh/m²a</td>
+        <td colspan="2"></td>
+      </tr>
+    </table>
+
+    <div class="xl-section-title">Endenergie (nicht mit GEG vergleichbar!)</div>
+
+    <table class="xl-table">
+      <tr>
+        <th style="width: 240px;">&nbsp;</th>
+        <th style="width: 120px;" class="num">Faktor</th>
+        <th style="width: 140px;" class="num">kWh/a</th>
+        <th style="width: 140px;" class="num">spezifisch<br>kWh/m²a</th>
+        <th style="width: 150px;">Vergleich Messung</th>
+        <th>Kommentar / Bezeichnung</th>
+      </tr>
+
+      <tr>
+        <td>Wärme (Verlustenergie)</td>
+        <td class="num refcell"></td>
+        <td class="num refcell"></td>
+        <td class="num refcell"></td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Heizwärme s.o</td>
+        <td class="num refcell">1,00</td>
+        <td class="num refcell">
+          <!-- Excel: =E38*(F22) -->
+          {{ calc.F38|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =F38/NGF_t -->
+          {{ calc.G38|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>s.o.</i></td>
+      </tr>
+
+      <tr>
+        <td>Übergabe Heiz / Wasser</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E39 -->
+          <input class="xl-input" type="number" step="0.0001" name="E39_transfer_heat_water" value="{{ sheet.E39_transfer_heat_water }}">
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =F22*$E39 -->
+          {{ calc.F39|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =F39/NGF_t -->
+          {{ calc.G39|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>5% pauschal, detailliert DIN V 18599-5:2018</i></td>
+      </tr>
+
+      <tr>
+        <td>Verteilung Heiz / Wasser</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E40 -->
+          <input class="xl-input" type="number" step="0.0001" name="E40_distribution_heat_water" value="{{ sheet.E40_distribution_heat_water }}">
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =E40*(F22+F39) -->
+          {{ calc.F40|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =F40/NGF_t -->
+          {{ calc.G40|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>5% pauschal, detailliert DIN V 18599-5:2019</i></td>
+      </tr>
+
+      <tr>
+        <td>Speicherung Heiz / Wasser</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E41 -->
+          <input class="xl-input" type="number" step="0.0001" name="E41_storage_heat_water" value="{{ sheet.E41_storage_heat_water }}">
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =E41*(F22+F39+F40) -->
+          {{ calc.F41|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =F41/NGF_t -->
+          {{ calc.G41|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>5% pauschal, detailliert DIN V 18599-5:2020</i></td>
+      </tr>
+
+      <tr>
+        <td>- Erzeugung Solar</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E42 (Freie Eingabe) -->
+          <input class="xl-input" type="number" step="0.0001" name="E42_solar_generation_factor" value="{{ sheet.E42_solar_generation_factor }}">
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =-F22*$E42 -->
+          {{ calc.F42|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =F42/NGF_t -->
+          {{ calc.G42|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>Freie Eingabe</i></td>
+      </tr>
+
+      <tr>
+        <td><b>Erzeugernutzwärmeabgabe</b></td>
+        <td class="refcell"></td>
+        <td class="num refcell">
+          <!-- Excel: =SUM(F38:F42) -->
+          {{ calc.F43|de_number:0 }}
+        </td>
+        <td class="num refcell">
+          <!-- Excel: =SUM(G38:G42) -->
+          {{ calc.G43|de_number:2 }}
+        </td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <th>Endenergie</th>
+        <th class="num">Faktor</th>
+        <th class="num">kWh/a</th>
+        <th class="num">kWh/m²a</th>
+        <th></th>
+        <th></th>
+      </tr>
+
+      <tr>
+        <td>Wärmeerzeuger WP</td>
+        <td class="num refcell">0,29</td>
+        <td class="num refcell">{{ calc.F46|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G46|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>Anteil an der Wärmeerzeugung * 1/ Arbeitszahl WP (4)</i></td>
+      </tr>
+
+      <tr>
+        <td>Wärmeerzeuger FW</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E47 -->
+          <input class="xl-input" type="number" step="0.0001" name="E47_factor_fw" value="{{ sheet.E47_factor_fw }}">
+        </td>
+        <td class="num refcell">{{ calc.F47|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G47|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>Anteil an der Wärmeerzeugung + Verluste</i></td>
+      </tr>
+
+      <tr>
+        <td>Wärmeerzeuger Gas</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E48 -->
+          <input class="xl-input" type="number" step="0.0001" name="E48_factor_gas" value="{{ sheet.E48_factor_gas }}">
+        </td>
+        <td class="num refcell">{{ calc.F48|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G48|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>Anteil an der Wärmeerzeugung + Verluste</i></td>
+      </tr>
+
+      <tr>
+        <td>Hilfsenergie Heizung</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E49 -->
+          <input class="xl-input" type="number" step="0.0001" name="E49_aux_heating" value="{{ sheet.E49_aux_heating }}">
+        </td>
+        <td class="num refcell">{{ calc.F49|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G49|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>3% pauschal</i></td>
+      </tr>
+
+      <tr>
+        <td>Trinkwarmwasser</td>
+        <td class="num refcell">1,00</td>
+        <td class="num refcell">{{ calc.F50|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G50|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>Durchlauferhitzer</i></td>
+      </tr>
+
+      <tr>
+        <td>Luftförderung</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E51 -->
+          <input class="xl-input" type="number" step="0.0001" name="E51_air_support" value="{{ sheet.E51_air_support }}">
+        </td>
+        <td class="num refcell">{{ calc.F51|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G51|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Beleuchtung</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E52 -->
+          <input class="xl-input" type="number" step="0.0001" name="E52_lighting" value="{{ sheet.E52_lighting }}">
+        </td>
+        <td class="num refcell">{{ calc.F52|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G52|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Nutzer (Prozess)</td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: E53 -->
+          <input class="xl-input" type="number" step="0.0001" name="E53_user_process" value="{{ sheet.E53_user_process }}">
+        </td>
+        <td class="num refcell">{{ calc.F53|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G53|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr class="xl-sumrow">
+        <td class="sumlabel" colspan="2">Endenergiebedarf</td>
+        <td class="num">{{ calc.F54|de_number:0 }}</td>
+        <td class="num">{{ calc.G54|de_number:2 }}</td>
+        <td colspan="2"></td>
+      </tr>
+
+      <tr class="xl-units">
+        <td colspan="2"></td>
+        <td class="num">kWh/a</td>
+        <td class="num">kWh/m²a</td>
+        <td colspan="2"></td>
+      </tr>
+    </table>
+
+    <div class="xl-section-title">Endenergie Strom</div>
+
+    <table class="xl-table">
+      <tr>
+        <th style="width: 240px;">Endenergie Strom</th>
+        <th style="width: 120px;" class="num">Faktor</th>
+        <th style="width: 140px;" class="num">kWh/a</th>
+        <th style="width: 140px;" class="num">kWh/m²a</th>
+        <th style="width: 150px;"></th>
+        <th>Kommentar</th>
+      </tr>
+
+      <tr>
+        <td>Wärmeerzeuger WP</td>
+        <td class="num refcell">{{ calc.E59|de_number:2 }}</td>
+        <td class="num refcell">{{ calc.F59|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G59|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>Anteil * Faktor = Anteil * 1/ Arbeitszahl WP (4)</i></td>
+      </tr>
+
+      <tr>
+        <td>Wärmeerzeuger FW</td>
+        <td class="num refcell">0,00</td>
+        <td class="num refcell">{{ calc.F60|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G60|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Wärmeerzeuger Gas</td>
+        <td class="num refcell">0,00</td>
+        <td class="num refcell">{{ calc.F61|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G61|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>sollte immer null sein da kein Strom</i></td>
+      </tr>
+
+      <tr>
+        <td>Hilfsenergie Heizung</td>
+        <td class="num refcell"></td>
+        <td class="num refcell">{{ calc.F62|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G62|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>3% pauschal</i></td>
+      </tr>
+
+      <tr>
+        <td>Trinkwarmwasser (wenn El.)</td>
+        <td class="num refcell">1,00</td>
+        <td class="num refcell">{{ calc.F63|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G63|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"><i>elektrisch = 1; sonst Hilfsenergie = 3 % pauschal</i></td>
+      </tr>
+
+      <tr>
+        <td>Luftförderung</td>
+        <td class="num refcell"></td>
+        <td class="num refcell">{{ calc.F64|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G64|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Beleuchtung</td>
+        <td class="num refcell"></td>
+        <td class="num refcell">{{ calc.F65|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G65|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Nutzer (Prozess)</td>
+        <td class="num refcell"></td>
+        <td class="num refcell">{{ calc.F66|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G66|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr class="xl-sumrow">
+        <td class="sumlabel" colspan="2">Endenergiebedarf Strom</td>
+        <td class="num">{{ calc.F67|de_number:0 }}</td>
+        <td class="num">{{ calc.G67|de_number:2 }}</td>
+        <td colspan="2"></td>
+      </tr>
+
+      <tr class="xl-units">
+        <td colspan="2"></td>
+        <td class="num">kWh/a</td>
+        <td class="num">kWh/m²a</td>
+        <td colspan="2"></td>
+      </tr>
+    </table>
+
+    <div class="xl-section-title">Primärenergie (nicht mit GEG vergleichbar!)</div>
+
+    <table class="xl-table">
+      <tr>
+        <th style="width: 240px;">Energiequelle</th>
+        <th style="width: 120px;" class="num">Faktor</th>
+        <th style="width: 140px;" class="num">Primärenergiebedarf<br>kWh/a</th>
+        <th style="width: 140px;" class="num">spezifisch<br>kWh/m²a</th>
+        <th style="width: 150px;">Vergleich Messung</th>
+        <th style="width: 140px;" class="num">Deckungsanteil</th>
+      </tr>
+
+      <tr>
+        <td>Wärme Solar</td>
+        <td class="num refcell">0,00</td>
+        <td class="num refcell">{{ calc.F75|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G75|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Wärme Fernwärme</td>
+        <td class="num refcell">0,25</td>
+        <td class="num refcell">{{ calc.F76|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G76|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Wärme Gas</td>
+        <td class="num refcell">1,10</td>
+        <td class="num refcell">{{ calc.F77|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G77|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell"></td>
+      </tr>
+
+      <tr>
+        <td>Strom (On-Site)*</td>
+        <td class="num refcell">-1,80</td>
+        <td class="num refcell">
+          <!-- Excel-Quelle: =IF('05 PHOTOVOLTAIK'!Q111 > '01 ERGEBNIS ENERGIE'!F68; ...) -->
+          {{ calc.F78|de_number:0 }}
+        </td>
+        <td class="num refcell">{{ calc.G78|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="xl-input-wrap">
+          <!-- Excel-Eingabe: I78 (Deckungsanteil On-Site) -->
+          <input class="xl-input" type="number" step="0.01" min="0" max="1" name="I78_pv_self_share" value="{{ sheet.I78_pv_self_share }}">
+        </td>
+      </tr>
+
+      <tr>
+        <td>Strom (Off-Site)</td>
+        <td class="num refcell">1,80</td>
+        <td class="num refcell">{{ calc.F79|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G79|de_number:2 }}</td>
+        <td class="refcell"></td>
+        <td class="refcell">
+          <!-- Excel: I79 = 1 - I75 - I76 ; hier pragmatisch: 1 - I78 -->
+          {{ calc.I79 }}
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="6" class="xl-note">
+          * Im GEG Nachweis wird eine Monatsbilanz mit jeweils anrechenbaren Anteilen erstellt! Hier idealisierte Bilanz über das ganze Jahr!
+        </td>
+      </tr>
+
+      <tr class="xl-sumrow">
+        <td class="sumlabel" colspan="2">Primärenergiebedarf</td>
+        <td class="num">{{ calc.F80|de_number:0 }}</td>
+        <td class="num">{{ calc.G80|de_number:2 }}</td>
+        <td colspan="2"></td>
+      </tr>
+
+      <tr class="xl-units">
+        <td colspan="2"></td>
+        <td class="num">kWh/a</td>
+        <td class="num">kWh/m²a</td>
+        <td colspan="2"></td>
+      </tr>
+    </table>
+
+    <div class="xl-section-title">Überschuss</div>
+
+    <table class="xl-table">
+      <tr class="xl-sumrow">
+        <td class="sumlabel" colspan="2">Strom (On-Site)</td>
+        <td class="num">
+          <!-- Excel-Quelle: ='05 PHOTOVOLTAIK'!Q111-'01 ERGEBNIS ENERGIE'!F78/E78 -->
+          {{ calc.F87|de_number:0 }}
+        </td>
+        <td class="num">{{ calc.G87|de_number:2 }}</td>
+        <td colspan="2"></td>
+      </tr>
+
+      <tr class="xl-units">
+        <td colspan="2"></td>
+        <td class="num">kWh/a</td>
+        <td class="num">kWh/m²a</td>
+        <td colspan="2"></td>
+      </tr>
+    </table>
+
+    <div class="xl-actions">
+      <button type="submit" class="xl-save">Speichern</button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}
