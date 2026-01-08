@@ -268,7 +268,7 @@ class GwpCompensation(models.Model):
 # ============================
 # GROUP 8: Load Profile
 from django.db import models
-
+# Übergangsklasse wird mit buildíngclass verknüpft
 
 class EnergyProject(models.Model):
     name = models.CharField(max_length=200, default="Machbarkeitsstudie")
