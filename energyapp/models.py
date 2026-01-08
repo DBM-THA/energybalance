@@ -86,6 +86,107 @@ class Building(models.Model):
     def __str__(self):
         return self.name
 
+# ============================
+# GROUP 1B: Sheet 01 – Ergebnis Energie (Overrides/Input)
+# ============================
+class Sheet01EnergyResult(models.Model):
+    """
+    Speichert NUR die editierbaren Felder aus dem Excel-Sheet
+    '01 ERGEBNIS ENERGIE' (Faktoren, Anteile, Deckungsanteile, Kopftexte).
+    Berechnete Werte werden NICHT gespeichert.
+    """
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="sheet01",
+    )
+
+    # Kopf (Excel: '04 LASTGANG'!K12/K13)
+    project = models.CharField(max_length=200, blank=True, default="")
+    location = models.CharField(max_length=200, blank=True, default="")
+
+    # Endenergie Wärme – Verlustfaktoren (Excel: 0,05 / 0,05 / 0,05 + Solar frei)
+    factor_transfer_hw = models.FloatField(default=0.05)      # Übergabe Heiz/Wasser
+    factor_distribution_hw = models.FloatField(default=0.05)  # Verteilung Heiz/Wasser
+    factor_storage_hw = models.FloatField(default=0.05)       # Speicherung Heiz/Wasser
+    factor_solar_generation = models.FloatField(default=0.0)  # "- Erzeugung Solar"
+
+    # Erzeuger-Anteile Wärme (Excel: C46/C47/C48)
+    share_wp = models.FloatField(default=1.0)
+    share_fw = models.FloatField(default=0.0)
+    share_gas = models.FloatField(default=0.0)
+
+    # Endenergie Faktoren (Excel: FW 0,4 / Gas 1,1 / Hilfsenergie 0,03)
+    factor_fw_heat = models.FloatField(default=0.4)
+    factor_gas_heat = models.FloatField(default=1.1)
+    factor_aux_heat = models.FloatField(default=0.03)
+
+    # Primärenergie Faktoren (Excel: FW 0,25 / Gas 1,1 / On-Site -1,8 / Off-Site 1,8)
+    pe_factor_fw = models.FloatField(default=0.25)
+    pe_factor_gas = models.FloatField(default=1.1)
+    pe_factor_on_site = models.FloatField(default=-1.8)
+    pe_factor_off_site = models.FloatField(default=1.8)
+
+    # Deckungsanteil PV Eigennutzung (Excel: I78 = 0,7)
+    pv_self_use_share = models.FloatField(default=0.7)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Sheet01EnergyResult for {self.building.name}"
+# ============================
+# SHEET 01: Ergebnis Energie (Inputs + Kommentare)
+# ============================
+class EnergyResultSheet01(models.Model):
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="sheet01_energy",
+    )
+
+    # Kopfbereich
+    project = models.CharField(max_length=200, blank=True, default="")
+    location = models.CharField(max_length=200, blank=True, default="")
+
+    # Eingaben wie Excel (E-Spalte in deinem Sheet)
+    # Excel-Eingabe: E39
+    E39_transfer_heat_water = models.FloatField(default=0.05)
+
+    # Excel-Eingabe: E40
+    E40_distribution_heat_water = models.FloatField(default=0.05)
+
+    # Excel-Eingabe: E41
+    E41_storage_heat_water = models.FloatField(default=0.05)
+
+    # Excel-Eingabe: E42 (freie Eingabe)
+    E42_solar_generation_factor = models.FloatField(default=0.0)
+
+    # Excel-Eingabe: E47
+    E47_factor_fw = models.FloatField(default=0.4)
+
+    # Excel-Eingabe: E48
+    E48_factor_gas = models.FloatField(default=1.1)
+
+    # Excel-Eingabe: E49
+    E49_aux_heating = models.FloatField(default=0.03)
+
+    # Excel-Eingabe: E51
+    E51_air_support = models.FloatField(default=1.0)
+
+    # Excel-Eingabe: E52
+    E52_lighting = models.FloatField(default=1.0)
+
+    # Excel-Eingabe: E53
+    E53_user_process = models.FloatField(default=1.0)
+
+    # Primärenergie Deckungsanteil On-Site (I78)
+    # Excel-Eingabe: I78 (in Excel: 0,7)
+    I78_pv_self_share = models.FloatField(default=0.7)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Sheet01 – {self.building.name}"
 
 # ============================
 # GROUP 2: Envelope Components
