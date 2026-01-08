@@ -1,0 +1,47 @@
+{# GWP Übersicht – ergänzt für Issue #17 (GWP Herstellung & Kompensation) #}
+
+{% extends "base.html" %}
+{% block content %}
+
+<h2>GWP Übersicht</h2>
+
+<p><strong>Gebäude:</strong> {{ building.name }}</p>
+
+<h2>06 – Herstellung</h2>
+
+{% if manufacturing %}
+  <p>KG300 neu: {{ manufacturing.kg300_new|floatformat:1 }} kg</p>
+  <p>KG400 neu: {{ manufacturing.kg400_new|floatformat:1 }} kg</p>
+  <p><b>Summe neu (300+400): {{ manufacturing.new_components_gwp|floatformat:1 }} kg</b></p>
+
+  <p>KG300 Bestand: {{ manufacturing.kg300_existing|floatformat:1 }} kg</p>
+  <p>KG400 Bestand: {{ manufacturing.kg400_existing|floatformat:1 }} kg</p>
+  <p><b>Summe Bestand (300+400): {{ manufacturing.existing_components_gwp|floatformat:1 }} kg</b></p>
+
+  <p>Nutzungsdauer: {{ manufacturing.service_life_years|floatformat:0 }} a</p>
+  <p>Neu pro Jahr: {{ manufacturing.new_per_year|floatformat:1 }} kg/a</p>
+  <p>Bestand pro Jahr: {{ manufacturing.existing_per_year|floatformat:1 }} kg/a</p>
+
+  <a href="{% url 'gwp_manufacturing_edit' building.id %}">Bearbeiten</a>
+{% else %}
+  <p>Noch keine Daten. <a href="{% url 'gwp_manufacturing_edit' building.id %}">Jetzt eingeben</a></p>
+{% endif %}
+
+
+<h2>07 – Kompensation</h2>
+
+{% if compensation %}
+  <p>CO₂ Fernwärme regenerativ: {{ compensation.co2_dh_renew|floatformat:0 }} kg/a</p>
+  <p>CO₂ Fernwärme durchschnitt: {{ compensation.co2_dh_avg|floatformat:0 }} kg/a</p>
+  <p>CO₂ Gas: {{ compensation.co2_gas|floatformat:0 }} kg/a</p>
+  <p>CO₂ Strom: {{ compensation.co2_electricity|floatformat:0 }} kg/a</p>
+
+  <p><b>Summe Betrieb: {{ compensation.total_co2_operation|floatformat:0 }} kg/a</b></p>
+
+  <a href="{% url 'gwp_compensation_edit' building.id %}">Bearbeiten</a>
+{% else %}
+  <p>Noch keine Daten. <a href="{% url 'gwp_compensation_edit' building.id %}">Jetzt eingeben</a></p>
+{% endif %}
+
+
+{% endblock %}

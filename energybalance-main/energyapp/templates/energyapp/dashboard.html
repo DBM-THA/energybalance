@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body_class %}dashboard-page{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-header-title">Dashboard</h1>
+        <p class="page-header-subtitle">
+            Überblick über Gebäude, Berechnungen und Exporte.
+        </p>
+    </div>
+</div>
+
+<div class="dashboard-background">
+    <div class="row g-4">
+
+        <!-- Card 1: Neues Gebäude berechnen -->
+        <div class="col-md-4">
+            <div class="card dashboard-card h-100">
+                <img src="{% static 'img/dashboard_new_building.png' %}"
+                     class="card-img-top dashboard-card-img"
+                     alt="Neues Gebäude berechnen">
+                <div class="card-body">
+                    <h5 class="card-title">Neues Gebäude berechnen</h5>
+                    <p class="card-text">
+                        Erfassen Sie die Geometrie, U-Werte, interne und
+                        solare Gewinne und berechnen Sie den Heizwärmebedarf
+                        sowie die PV-Bilanz.
+                    </p>
+                    <a href="{% url 'building_create' %}" class="btn btn-primary">
+                        Eingabeformular öffnen
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Gespeicherte Gebäude -->
+        <div class="col-md-4">
+            <div class="card dashboard-card h-100">
+                <img src="{% static 'img/dashboard_saved_buildings.png' %}"
+                     class="card-img-top dashboard-card-img"
+                     alt="Gespeicherte Gebäude">
+                <div class="card-body">
+                    <h5 class="card-title">Gespeicherte Gebäude</h5>
+                    <p class="card-text">
+                        Aktuell gespeicherte Gebäude: {{ building_count }}<br>
+                        Letztes Gebäude: <strong>{{ last_building.name }}</strong>
+                    </p>
+                    <a href="{% url 'building_list' %}" class="btn btn-outline-primary">
+                        Gebäudeliste anzeigen
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Datenexport -->
+        <div class="col-md-4">
+            <div class="card dashboard-card h-100">
+                <img src="{% static 'img/dashboard_export.png' %}"
+                     class="card-img-top dashboard-card-img"
+                     alt="Datenexport">
+                <div class="card-body">
+                    <h5 class="card-title">Datenexport</h5>
+                    <p class="card-text">
+                        Exportieren Sie die Gebäudedaten als CSV, Excel oder PDF
+                        zur weiteren Auswertung oder Dokumentation.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'building_export_csv' %}" class="btn btn-outline-secondary btn-sm">
+                            CSV
+                        </a>
+                        <a href="{% url 'building_export_xlsx' %}" class="btn btn-outline-secondary btn-sm">
+                            Excel
+                        </a>
+                        <a href="{% url 'building_export_pdf' %}" class="btn btn-outline-secondary btn-sm">
+                            PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

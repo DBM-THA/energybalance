@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bauteil – U-Wert Analyse</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+
+
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+
+    <h2 class="mb-4">🏗️ Bauteil für U-Wert-Analyse anlegen</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- ========================================= -->
+        <!--           BAUTEIL-INFOS                   -->
+        <!-- ========================================= -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                Grunddaten des Bauteils
+            </div>
+
+            <div class="card-body">
+
+                <!-- Bauteiltyp -->
+                <div class="mb-3">
+                    <label class="form-label">Bauteiltyp</label>
+                    {{ form.building_part }}
+                </div>
+
+                <!-- Name -->
+                <div class="mb-3">
+                    <label class="form-label">Bezeichnung</label>
+                    {{ form.name }}
+                </div>
+
+                <!-- Umschalter -->
+                <div class="form-check form-switch mb-3">
+                    {{ form.use_custom_layers }}
+                    <label class="form-check-label">
+                        Eigene Schichten verwenden?
+                    </label>
+                </div>
+
+                <!-- Externer U-Wert -->
+                <div id="external_u_value_block" class="mb-3">
+                    <label class="form-label">Externer U-Wert (W/m²K)</label>
+                    {{ form.u_value_external }}
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ========================================= -->
+        <!--             SCHICHTEN-EINGABE             -->
+        <!-- ========================================= -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                Schichtaufbau (Innen → Material → Außen)
+            </div>
+
+            <div class="card-body">
+
+                {{ formset.management_form }}
+
+                <div id="layers-container">
+                    {% for layer_form in formset %}
+                        <div class="layer-card">
+
+                            <!-- Layer type & name -->
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Schicht-Typ</label>
+                                    {{ layer_form.layer_type }}
+                                </div>
+
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">Name</label>
+                                    {{ layer_form.name }}
+                                </div>
+                            </div>
+
+                            <!-- Dicke & lambda (nur Material) -->
+                            <div class="row layer-material-fields">
+                                <div class="col-md-4 mb-3">
+                                    <label>Dicke d (m)</label>
+                                    {{ layer_form.thickness }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Wärmeleitfähigkeit λ (W/mK)</label>
+                                    {{ layer_form.lambda_value }}
+                                </div>
+                            </div>
+
+                            <!-- R-Wert -->
+                            <div class="row layer-rvalue-field">
+                                <div class="col-md-4 mb-3">
+                                    <label>Widerstand R (m²K/W)</label>
+                                    {{ layer_form.R_value }}
+                                </div>
+                            </div>
+
+                            <!-- Löschen -->
+                            {% if layer_form.DELETE %}
+                                <div class="form-check mt-2">
+                                    {{ layer_form.DELETE }}
+                                    <label class="form-check-label">Schicht löschen</label>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ========================================= -->
+        <!--                 ABSENDEN                  -->
+        <!-- ========================================= -->
+        <button type="submit" class="btn btn-success btn-lg">
+            💾 Bauteil speichern
+        </button>
+
+    </form>
+</div>
+
+
+<!-- ======================= -->
+<!--       JAVASCRIPT        -->
+<!-- ======================= -->
+<script>
+    function refreshLayerFields() {
+        document.querySelectorAll(".layer-card").forEach(card => {
+
+            const type = card.querySelector(".layer-type").value;
+            const matFields = card.querySelector(".layer-material-fields");
+            const rField = card.querySelector(".layer-rvalue-field");
+
+            if (type === "layer") {
+                matFields.style.display = "flex";
+                rField.style.display = "none";
+            } else {
+                matFields.style.display = "none";
+                rField.style.display = "block";
+            }
+        });
+    }
+
+    function toggleExternalUValue() {
+        const enableLayers = document.querySelector("#id_use_custom_layers").checked;
+        document.querySelector("#external_u_value_block").style.display =
+            enableLayers ? "none" : "block";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        refreshLayerFields();
+        toggleExternalUValue();
+
+        document.querySelectorAll(".layer-type").forEach(el => {
+            el.addEventListener("change", refreshLayerFields);
+        });
+
+        document
+            .querySelector("#id_use_custom_layers")
+            .addEventListener("change", toggleExternalUValue);
+    });
+</script>
+
+</body>
+</html>

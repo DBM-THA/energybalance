@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  body { background: #f5f7fb; }
+  .summer-wrapper { max-width: 1100px; margin: 1.5rem auto 3rem auto; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .summer-header { text-align:center; margin-bottom: 1.2rem; }
+  .summer-layout { display:flex; gap:2rem; align-items:flex-start; }
+  .summer-column { flex:1; }
+  .summer-card { border-radius:10px; padding:1rem 1.3rem; margin-bottom:1rem; background:#fff; box-shadow:0 0 0 1px #e0e4ee; }
+  .summer-field { margin-bottom: .7rem; }
+  .summer-field label { display:block; font-size:.8rem; margin-bottom:.2rem; color:#555; }
+  .summer-field input, .summer-field select { width:100%; box-sizing:border-box; padding:.4rem .5rem; font-size:.9rem; border-radius:6px; border:1px solid #d0d5e0; background:#fbfcff; }
+  .badge { display:inline-block; padding:.25rem .7rem; border-radius:999px; font-size:.85rem; font-weight:700; }
+  .ok { background:#e6f5e6; color:#2f7d2f; }
+  .bad { background:#fde4e4; color:#b13131; }
+  .summer-actions { margin-top:1.2rem; text-align:center; }
+  .summer-actions button { padding:.55rem 1.6rem; border-radius:999px; border:none; background:#2563eb; color:#fff; font-size:.95rem; font-weight:600; cursor:pointer; }
+  @media (max-width: 900px) { .summer-layout { flex-direction: column; } }
+</style>
+
+<div class="summer-wrapper">
+  <div class="summer-header">
+    <h1 style="margin:0; font-size:1.6rem;">Sommerlicher Wärmeschutz – Schritt 1</h1>
+    <p style="margin:.3rem 0 0 0; color:#666;">Prüfen, ob ein Nachweis erforderlich ist (Grenzwert: 10%)</p>
+  </div>
+
+  {% if form %}
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="summer-layout">
+      <div class="summer-column">
+        <div class="summer-card">
+          <h2 style="margin:0 0 .7rem 0;">Eingaben (kritischer Raum)</h2>
+
+          <div class="summer-field">
+            {{ form.building.label_tag }}
+            {{ form.building }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.orientation.label_tag }}
+            {{ form.orientation }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.ngf_m2.label_tag }}
+            {{ form.ngf_m2 }}
+          </div>
+
+          <div class="summer-field">
+            {{ form.window_area_m2.label_tag }}
+            {{ form.window_area_m2 }}
+          </div>
+
+          <p style="font-size:.85rem; color:#777; margin:.6rem 0 0 0;">
+            Wir nehmen die größte Fensterfläche + Raumfläche und berechnen den Fensterflächenanteil.
+          </p>
+        </div>
+      </div>
+
+      <div class="summer-column">
+        <div class="summer-card">
+          <h2 style="margin:0 0 .7rem 0;">Ergebnis</h2>
+
+          {% if result %}
+            <p>Fensterflächenanteil: <b>{{ result.window_share_pct }}%</b></p>
+            <p>Grenzwert: <b>{{ result.threshold_pct }}%</b></p>
+
+            {% if result.needs_proof %}
+              <span class="badge bad">Nachweis erforderlich → Schritt 2</span>
+              <p style="margin-top:.8rem;">
+                <a href="{% url 'summer_step2' %}">→ Weiter zu Schritt 2</a>
+              </p>
+            {% else %}
+              <span class="badge ok">Kein Nachweis erforderlich</span>
+            {% endif %}
+          {% else %}
+            <p style="color:#666;">Noch kein Ergebnis. Bitte Werte eingeben und berechnen.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="summer-actions">
+      <button type="submit">Schritt 1 berechnen</button>
+    </div>
+  </form>
+  {% else %}
+    <div class="summer-card">
+      <h2>Hinweis</h2>
+      <p>Bitte zuerst ein Gebäude anlegen.</p>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

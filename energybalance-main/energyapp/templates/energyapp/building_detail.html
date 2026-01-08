@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block body_class %}calculator-page{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-header-title">{{ building.name }}</h1>
+        <p class="page-header-subtitle">
+            Heizwärmebedarf: {{ building.result_Q_h|default:0|floatformat:0 }} kWh/a ·
+            Grundfläche: {{ building.result_floor_area|default:0|floatformat:0 }} m²
+        </p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{% url 'building_list' %}" class="btn btn-outline-secondary btn-sm">Zurück zur Liste</a>
+        <a href="{% url 'building_create' %}" class="btn btn-primary btn-sm">Neues Gebäude berechnen</a>
+        <a href="{% url 'building_edit' building.pk %}" class="btn btn-outline-primary btn-sm">
+            Dieses Gebäude bearbeiten
+        </a>
+        <a href="{% url 'building_result_pdf' building.pk %}" class="btn btn-outline-secondary btn-sm">
+            Bericht als PDF
+        </a>
+    </div>
+</div>
+
+
+<div class="row g-3">
+    <!-- Geometrie -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Geometrie</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li>Grundfläche: {{ building.result_floor_area|default:0|floatformat:1 }} m²</li>
+                    <li>Dachfläche: {{ building.result_roof_area|default:0|floatformat:1 }} m²</li>
+                    <li>Opake Wandfläche: {{ building.result_opaque_wall_area|default:0|floatformat:1 }} m²</li>
+                    <li>Fensterfläche gesamt: {{ building.result_window_area|default:0|floatformat:1 }} m²</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wärmekoeffizienten -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Wärmeverlustkoeffizienten</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li>H<sub>T</sub> (Transmission): {{ building.result_H_T|default:0|floatformat:1 }} W/K</li>
+                    <li>H<sub>V</sub> (Lüftung): {{ building.result_H_V|default:0|floatformat:1 }} W/K</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Heizwärmebedarf -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Heizwärmebedarf</div>
+            <div class="card-body">
+                <p class="mb-1">
+                    Q<sub>h</sub> = Q<sub>V</sub> + Q<sub>T</sub> − Q<sub>I</sub> − Q<sub>S</sub>
+                </p>
+                <h4 class="mb-0">{{ building.result_Q_h|default:0|floatformat:0 }} kWh/a</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-2">
+    <!-- Energiegrößen -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Energiegrößen jährlich</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li>Q<sub>T</sub> (Transmissionsverluste): {{ building.result_Q_T|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Q<sub>V</sub> (Lüftungsverluste): {{ building.result_Q_V|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Q<sub>I</sub> (interne Gewinne): −{{ building.result_Q_I|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Q<sub>S</sub> (solare Gewinne): −{{ building.result_Q_S|default:0|floatformat:0 }} kWh/a</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Solare Gewinne nach Orientierung -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Solare Gewinne nach Orientierung</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li>Nord: {{ building.result_Q_S_n|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Ost: {{ building.result_Q_S_e|default:0|floatformat:0 }} kWh/a</li>
+                    <li>Süd: {{ building.result_Q_S_s|default:0|floatformat:0 }} kWh/a</li>
+                    <li>West: {{ building.result_Q_S_w|default:0|floatformat:0 }} kWh/a</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-2">
+    <!-- PV-Bilanz -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">PV-Bilanz</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li>PV-Ertrag gesamt: {{ building.result_Q_PV_total|default:0|floatformat:0 }} kWh/a</li>
+                    <li>PV Eigenverbrauch (Q<sub>PV,on</sub>): {{ building.result_Q_PV_on|default:0|floatformat:0 }} kWh/a</li>
+                    <li>PV Überschuss (Q<sub>PV,off</sub>): {{ building.result_Q_PV_off|default:0|floatformat:0 }} kWh/a</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Diagramme -->
+<div class="row g-3 mt-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Energieflüsse (jährlich)</div>
+            <div class="card-body">
+                <canvas id="energyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Solare Gewinne nach Orientierung</div>
+            <div class="card-body">
+                <canvas id="solarChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">PV-Nutzung</div>
+            <div class="card-body">
+                <canvas id="pvChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="mt-3">
+    <small>Hinweis: vereinfachtes Rechenmodell, dient der Veranschaulichung der Energiebilanz eines Gebäudes.</small>
+</p>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Daten aus dem Modell
+        const qT = {{ building.result_Q_T|default:0 }};
+        const qV = {{ building.result_Q_V|default:0 }};
+        const qI = {{ building.result_Q_I|default:0 }};
+        const qS = {{ building.result_Q_S|default:0 }};
+        const qH = {{ building.result_Q_h|default:0 }};
+
+        const qSn = {{ building.result_Q_S_n|default:0 }};
+        const qSe = {{ building.result_Q_S_e|default:0 }};
+        const qSs = {{ building.result_Q_S_s|default:0 }};
+        const qSw = {{ building.result_Q_S_w|default:0 }};
+
+        const qPVtotal = {{ building.result_Q_PV_total|default:0 }};
+        const qPVon = {{ building.result_Q_PV_on|default:0 }};
+        const qPVoff = {{ building.result_Q_PV_off|default:0 }};
+
+        // 1) Energieflüsse
+        const ctxEnergy = document.getElementById('energyChart').getContext('2d');
+        new Chart(ctxEnergy, {
+            type: 'bar',
+            data: {
+                labels: ['Q_T (Verluste)', 'Q_V (Verluste)', 'Q_I (Gewinne)', 'Q_S (Gewinne)', 'Q_h (Bedarf)'],
+                datasets: [{
+                    label: 'kWh/a',
+                    data: [
+                        qT,
+                        qV,
+                        -qI,  // Gewinne negativ
+                        -qS,
+                        qH
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'kWh/a' }
+                    }
+                }
+            }
+        });
+
+        // 2) Solare Gewinne je Orientierung
+        const ctxSolar = document.getElementById('solarChart').getContext('2d');
+        new Chart(ctxSolar, {
+            type: 'bar',
+            data: {
+                labels: ['Nord', 'Ost', 'Süd', 'West'],
+                datasets: [{
+                    label: 'kWh/a',
+                    data: [qSn, qSe, qSs, qSw]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'kWh/a' }
+                    }
+                }
+            }
+        });
+
+        // 3) PV-Nutzung (Eigenverbrauch vs. Überschuss)
+        const ctxPV = document.getElementById('pvChart').getContext('2d');
+        new Chart(ctxPV, {
+            type: 'bar',
+            data: {
+                labels: ['PV Eigenverbrauch', 'PV Überschuss'],
+                datasets: [{
+                    label: 'kWh/a',
+                    data: [qPVon, qPVoff]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'kWh/a' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}

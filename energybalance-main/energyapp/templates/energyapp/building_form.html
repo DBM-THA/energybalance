@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block body_class %}calculator-page{% endblock %}
+{% block title %}Gebäudedaten – Energiebilanz{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-header-title">
+            {% if edit_mode %}
+                Gebäudedaten bearbeiten – {{ building.name }}
+            {% else %}
+                Gebäudedaten eingeben
+            {% endif %}
+        </h1>
+        <p class="page-header-subtitle">
+            Geometrie, U-Werte, interne und solare Gewinne erfassen.
+        </p>
+    </div>
+    <div class="btn-group mb-4" role="group">
+      <a href="{% url 'calculator_simple' %}"
+         class="btn btn-outline-primary {% if simple_mode %}active{% endif %}">
+        Einfache Eingabe
+      </a>
+      <a href="{% url 'calculator_detailed' %}"
+         class="btn btn-outline-primary {% if not simple_mode %}active{% endif %}">
+        Detaillierte Eingabe
+      </a>
+    </div>
+
+    <div class="page-header-actions">
+        <a href="{% url 'building_list' %}" class="btn btn-outline-secondary btn-sm">
+            Zur Gebäudeliste
+        </a>
+    </div>
+</div>
+
+
+<form method="post" class="row g-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="col-12">
+        <fieldset>
+            <legend>Allgemein</legend>
+            <div class="mb-3">
+                {{ form.name.label_tag }}
+                {{ form.name|add_class:"form-control" }}
+                {{ form.name.errors }}
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="col-md-6">
+        <fieldset>
+            <legend>Geometrie</legend>
+            <div class="mb-3">
+                {{ form.length_ns.label_tag }}
+                {{ form.length_ns|add_class:"form-control" }}
+                {{ form.length_ns.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.width_ow.label_tag }}
+                {{ form.width_ow|add_class:"form-control" }}
+                {{ form.width_ow.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.storeys.label_tag }}
+                {{ form.storeys|add_class:"form-control" }}
+                {{ form.storeys.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.room_height.label_tag }}
+                {{ form.room_height|add_class:"form-control" }}
+                {{ form.room_height.errors }}
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="col-md-6">
+        <fieldset>
+            <legend class="d-flex align-items-center">
+                <span>Bauteile – U-Werte</span>
+
+                {% if not simple_mode %}
+                <a href="{% url 'envelope_detail' %}"
+                   class="btn btn-outline-secondary btn-sm ms-2">
+                    Details
+                </a>
+                {% endif %}
+            </legend>
+
+            <div class="mb-3">
+                {{ form.u_wall.label_tag }}
+                {{ form.u_wall|add_class:"form-control" }}
+                {{ form.u_wall.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.u_roof.label_tag }}
+                {{ form.u_roof|add_class:"form-control" }}
+                {{ form.u_roof.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.u_floor.label_tag }}
+                {{ form.u_floor|add_class:"form-control" }}
+                {{ form.u_floor.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.u_window.label_tag }}
+                {{ form.u_window|add_class:"form-control" }}
+                {{ form.u_window.errors }}
+            </div>
+        </fieldset>
+    </div>
+
+    {% if not simple_mode %}
+    <div class="col-md-6">
+        <fieldset>
+            <legend>Fensterflächen [%]</legend>
+            <div class="mb-3">
+                {{ form.window_share_n.label_tag }}
+                {{ form.window_share_n|add_class:"form-control" }}
+                {{ form.window_share_n.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.window_share_e.label_tag }}
+                {{ form.window_share_e|add_class:"form-control" }}
+                {{ form.window_share_e.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.window_share_s.label_tag }}
+                {{ form.window_share_s|add_class:"form-control" }}
+                {{ form.window_share_s.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.window_share_w.label_tag }}
+                {{ form.window_share_w|add_class:"form-control" }}
+                {{ form.window_share_w.errors }}
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="col-md-6">
+        <fieldset>
+            <legend class="d-flex align-items-center">
+                <span>Solare Gewinne – g-Werte</span>
+
+                {% if not simple_mode %}
+                <a href="{% url 'solar_gains' %}"
+                   class="btn btn-outline-secondary btn-sm ms-2">
+                    Details
+                </a>
+                {% endif %}
+            </legend>
+
+            <div class="mb-3">
+                {{ form.g_n.label_tag }}
+                {{ form.g_n|add_class:"form-control" }}
+                {{ form.g_n.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.g_e.label_tag }}
+                {{ form.g_e|add_class:"form-control" }}
+                {{ form.g_e.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.g_s.label_tag }}
+                {{ form.g_s|add_class:"form-control" }}
+                {{ form.g_s.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.g_w.label_tag }}
+                {{ form.g_w|add_class:"form-control" }}
+                {{ form.g_w.errors }}
+            </div>
+        </fieldset>
+    </div>
+    {% endif %}
+
+    {% if not simple_mode %}
+    <div class="col-md-6">
+        <fieldset>
+            <legend class="d-flex align-items-center">
+                <span>Innere Gewinne</span>
+                <a href="{% url 'internal_gains' %}"
+                   class="btn btn-outline-secondary btn-sm ms-2">
+                    Details
+                </a>
+            </legend>
+            <div class="mb-3">
+                {{ form.person_density.label_tag }}
+                {{ form.person_density|add_class:"form-control" }}
+                {{ form.person_density.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.persons.label_tag }}
+                {{ form.persons|add_class:"form-control" }}
+                {{ form.persons.errors }}
+            </div>
+        </fieldset>
+    </div>
+    {% endif %}
+
+
+    <div class="col-md-6">
+        <fieldset>
+            <legend>Lüftung &amp; Klima</legend>
+            <div class="mb-3">
+                {{ form.air_change_rate.label_tag }}
+                {{ form.air_change_rate|add_class:"form-control" }}
+                {{ form.air_change_rate.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.degree_days.label_tag }}
+                {{ form.degree_days|add_class:"form-control" }}
+                {{ form.degree_days.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.setpoint_temp.label_tag }}
+                {{ form.setpoint_temp|add_class:"form-control" }}
+                {{ form.setpoint_temp.errors }}
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="col-md-6">
+        <fieldset>
+            <legend>PV-Anlage</legend>
+            <div class="mb-3">
+                {{ form.pv_roof_share.label_tag }}
+                {{ form.pv_roof_share|add_class:"form-control" }}
+                {{ form.pv_roof_share.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.pv_specific_yield.label_tag }}
+                {{ form.pv_specific_yield|add_class:"form-control" }}
+                {{ form.pv_specific_yield.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.pv_self_consumption_share.label_tag }}
+                {{ form.pv_self_consumption_share|add_class:"form-control" }}
+                {{ form.pv_self_consumption_share.errors }}
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Berechnen</button>
+    </div>
+</form>
+
+
+{% endblock %}
