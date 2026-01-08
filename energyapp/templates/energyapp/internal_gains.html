@@ -1,8 +1,73 @@
-{% extends "base.html" %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Internal Gains</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
+    h1 { margin: 0 0 12px 0; }
+    .hint { opacity: 0.75; margin-bottom: 16px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; font-size: 14px; }
+    th { position: sticky; top: 0; background: #f6f6f6; }
+  </style>
+</head>
+<body>
+  <h1>Internal Gains</h1>
+  <div class="hint">Quelle: internal_gains.csv</div>
+  <div id="status">Lade CSV</div>
 
-{% block content %}
-<div class="container mt-4">
-    <h1>Interne Gewinne</h1>
-    <p>Platzhalter – Inhalt folgt.</p>
-</div>
-{% endblock %}
+  <div style="overflow:auto; max-height: 75vh; margin-top: 12px;">
+    <table id="tbl"></table>
+  </div>
+
+  <script>
+    function parseCsv(text, sep = ";") {
+      const lines = text.replace(/\r/g, "").split("\n").filter(Boolean);
+      return lines.map(line => line.split(sep));
+    }
+
+    function renderTable(rows) {
+      const table = document.getElementById("tbl");
+      table.innerHTML = "";
+
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      rows[0].forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      rows.slice(1).forEach(r => {
+        const tr = document.createElement("tr");
+        r.forEach(c => {
+          const td = document.createElement("td");
+          td.textContent = c;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    }
+
+    fetch("internal_gains.csv")
+      .then(r => {
+        if (!r.ok) throw new Error("CSV nicht gefunden. Liegt sie im gleichen Ordner und heißt internal_gains.csv?");
+        return r.text();
+      })
+      .then(text => {
+        const rows = parseCsv(text, ";");
+        document.getElementById("status").textContent = "Fertig";
+        renderTable(rows);
+      })
+      .catch(err => {
+        document.getElementById("status").textContent = "Fehler: " + err.message;
+      });
+  </script>
+</body>
+</html>
