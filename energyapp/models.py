@@ -172,14 +172,24 @@ class Layer(models.Model):
 # ============================
 # GROUP 3: Internal Gains
 # ============================
+class InternalGains(models.Model):
+    dummy = models.CharField(max_length=100)
 
 # ============================
 # GROUP 4: Ventilation
 # ============================
+class Ventilation(models.Model):
+    dummy = models.CharField(max_length=100)
+
 
 # ============================
 # GROUP 5: Lighting & Water
 # ============================
+class Lighting(models.Model):
+    dummy = models.CharField(max_length=100)
+
+class Water(models.Model):
+    dummy = models.CharField(max_length=100)
 
 # ============================
 # GROUP 6: GWP - Herstellung
