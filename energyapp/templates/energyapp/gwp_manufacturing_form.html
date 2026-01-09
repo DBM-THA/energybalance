@@ -1,12 +1,39 @@
 {% extends "base.html" %}
+
+
 {% block content %}
-<h2>GWP Herstellung (Tab 06)</h2>
+<h1>06 – Herstellung (Eingabe)</h1>
+<p><b>Gebäude:</b> {{ building.name }}</p>
 
 <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button class="btn btn-primary">Speichern</button>
+  {% csrf_token %}
+
+  <h3>Kostengruppe 300</h3>
+  <label>KG300 neue Bauteile [kg]</label><br>
+  <input type="number" step="0.01" min="0" name="kg300_new" value="{{ manufacturing.kg300_new|floatformat:1 }}"><br><br>
+
+  <label>KG300 Bestandsbauteile [kg]</label><br>
+  <input type="number" step="0.01" min="0" name="kg300_existing" value="{{ manufacturing.kg300_existing|floatformat:1 }}"><br><br>
+
+  <h3>Kostengruppe 400</h3>
+  <label>KG400 neue Bauteile [kg]</label><br>
+  <input type="number" step="0.01" min="0" name="kg400_new" value="{{ manufacturing.kg400_new|floatformat:1 }}"><br><br>
+
+  <label>KG400 Bestandsbauteile [kg]</label><br>
+  <input type="number" step="0.01" min="0" name="kg400_existing" value="{{ manufacturing.kg400_existing|floatformat:1 }}"><br><br>
+
+  <label>Nutzungsdauer [a]</label><br>
+  <input type="number" step="1" min="1" name="service_life_years" value="{{ manufacturing.service_life_years|floatformat:0 }}"><br><br>
+
+  <button type="submit">Speichern</button>
+  <a style="margin-left:10px;" href="{% url 'gwp_overview' building.id %}">Zurück zur Übersicht</a>
 </form>
 
-<a href="{% url 'gwp_overview' building.id %}">Zurück</a>
+<hr>
+
+<h3>Berechnet</h3>
+<p>Summe neu (KG300+400): {{ manufacturing.new_components_gwp|floatformat:1 }} kg</p>
+<p>Summe Bestand (KG300+400): {{ manufacturing.existing_components_gwp|floatformat:1 }} kg</p>
+<p>Neu pro Jahr: {{ manufacturing.new_per_year|floatformat:1 }} kg/a</p>
+<p>Bestand pro Jahr: {{ manufacturing.existing_per_year|floatformat:1 }} kg/a</p>
 {% endblock %}
