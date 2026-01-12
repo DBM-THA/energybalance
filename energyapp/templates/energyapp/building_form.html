@@ -80,7 +80,17 @@
 
     <div class="col-md-6">
         <fieldset>
-            <legend>Bauteile – U-Werte</legend>
+            <legend class="d-flex align-items-center">
+                <span>Bauteile – U-Werte</span>
+
+                {% if not simple_mode %}
+                <a href="{% url 'envelope_detail' %}"
+                   class="btn btn-outline-secondary btn-sm ms-2">
+                    Details
+                </a>
+                {% endif %}
+            </legend>
+
             <div class="mb-3">
                 {{ form.u_wall.label_tag }}
                 {{ form.u_wall|add_class:"form-control" }}
@@ -133,7 +143,17 @@
 
     <div class="col-md-6">
         <fieldset>
-            <legend>Solare Gewinne – g-Werte</legend>
+            <legend class="d-flex align-items-center">
+                <span>Solare Gewinne – g-Werte</span>
+
+                {% if not simple_mode %}
+                <a href="{% url 'solar_gains' %}"
+                   class="btn btn-outline-secondary btn-sm ms-2">
+                    Details
+                </a>
+                {% endif %}
+            </legend>
+
             <div class="mb-3">
                 {{ form.g_n.label_tag }}
                 {{ form.g_n|add_class:"form-control" }}

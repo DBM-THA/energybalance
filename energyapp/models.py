@@ -86,6 +86,107 @@ class Building(models.Model):
     def __str__(self):
         return self.name
 
+# ============================
+# GROUP 1B: Sheet 01 – Ergebnis Energie (Overrides/Input)
+# ============================
+class Sheet01EnergyResult(models.Model):
+    """
+    Speichert NUR die editierbaren Felder aus dem Excel-Sheet
+    '01 ERGEBNIS ENERGIE' (Faktoren, Anteile, Deckungsanteile, Kopftexte).
+    Berechnete Werte werden NICHT gespeichert.
+    """
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="sheet01",
+    )
+
+    # Kopf (Excel: '04 LASTGANG'!K12/K13)
+    project = models.CharField(max_length=200, blank=True, default="")
+    location = models.CharField(max_length=200, blank=True, default="")
+
+    # Endenergie Wärme – Verlustfaktoren (Excel: 0,05 / 0,05 / 0,05 + Solar frei)
+    factor_transfer_hw = models.FloatField(default=0.05)      # Übergabe Heiz/Wasser
+    factor_distribution_hw = models.FloatField(default=0.05)  # Verteilung Heiz/Wasser
+    factor_storage_hw = models.FloatField(default=0.05)       # Speicherung Heiz/Wasser
+    factor_solar_generation = models.FloatField(default=0.0)  # "- Erzeugung Solar"
+
+    # Erzeuger-Anteile Wärme (Excel: C46/C47/C48)
+    share_wp = models.FloatField(default=1.0)
+    share_fw = models.FloatField(default=0.0)
+    share_gas = models.FloatField(default=0.0)
+
+    # Endenergie Faktoren (Excel: FW 0,4 / Gas 1,1 / Hilfsenergie 0,03)
+    factor_fw_heat = models.FloatField(default=0.4)
+    factor_gas_heat = models.FloatField(default=1.1)
+    factor_aux_heat = models.FloatField(default=0.03)
+
+    # Primärenergie Faktoren (Excel: FW 0,25 / Gas 1,1 / On-Site -1,8 / Off-Site 1,8)
+    pe_factor_fw = models.FloatField(default=0.25)
+    pe_factor_gas = models.FloatField(default=1.1)
+    pe_factor_on_site = models.FloatField(default=-1.8)
+    pe_factor_off_site = models.FloatField(default=1.8)
+
+    # Deckungsanteil PV Eigennutzung (Excel: I78 = 0,7)
+    pv_self_use_share = models.FloatField(default=0.7)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Sheet01EnergyResult for {self.building.name}"
+# ============================
+# SHEET 01: Ergebnis Energie (Inputs + Kommentare)
+# ============================
+class EnergyResultSheet01(models.Model):
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="sheet01_energy",
+    )
+
+    # Kopfbereich
+    project = models.CharField(max_length=200, blank=True, default="")
+    location = models.CharField(max_length=200, blank=True, default="")
+
+    # Eingaben wie Excel (E-Spalte in deinem Sheet)
+    # Excel-Eingabe: E39
+    E39_transfer_heat_water = models.FloatField(default=0.05)
+
+    # Excel-Eingabe: E40
+    E40_distribution_heat_water = models.FloatField(default=0.05)
+
+    # Excel-Eingabe: E41
+    E41_storage_heat_water = models.FloatField(default=0.05)
+
+    # Excel-Eingabe: E42 (freie Eingabe)
+    E42_solar_generation_factor = models.FloatField(default=0.0)
+
+    # Excel-Eingabe: E47
+    E47_factor_fw = models.FloatField(default=0.4)
+
+    # Excel-Eingabe: E48
+    E48_factor_gas = models.FloatField(default=1.1)
+
+    # Excel-Eingabe: E49
+    E49_aux_heating = models.FloatField(default=0.03)
+
+    # Excel-Eingabe: E51
+    E51_air_support = models.FloatField(default=1.0)
+
+    # Excel-Eingabe: E52
+    E52_lighting = models.FloatField(default=1.0)
+
+    # Excel-Eingabe: E53
+    E53_user_process = models.FloatField(default=1.0)
+
+    # Primärenergie Deckungsanteil On-Site (I78)
+    # Excel-Eingabe: I78 (in Excel: 0,7)
+    I78_pv_self_share = models.FloatField(default=0.7)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Sheet01 – {self.building.name}"
 
 # ============================
 # GROUP 2: Envelope Components
@@ -172,14 +273,24 @@ class Layer(models.Model):
 # ============================
 # GROUP 3: Internal Gains
 # ============================
+class InternalGains(models.Model):
+    dummy = models.CharField(max_length=100)
 
 # ============================
 # GROUP 4: Ventilation
 # ============================
+class Ventilation(models.Model):
+    dummy = models.CharField(max_length=100)
+
 
 # ============================
 # GROUP 5: Lighting & Water
 # ============================
+class Lighting(models.Model):
+    dummy = models.CharField(max_length=100)
+
+class Water(models.Model):
+    dummy = models.CharField(max_length=100)
 
 # ============================
 # GROUP 6: GWP - Herstellung
@@ -365,3 +476,166 @@ class GwpCompensation(models.Model):
 # ============================
 # GROUP 8: Load Profile
 # ============================
+from django.db import models
+# Übergangsklasse wird mit buildíngclass verknüpft
+
+class EnergyProject(models.Model):
+    name = models.CharField(max_length=200, default="Machbarkeitsstudie")
+    standort = models.CharField(max_length=100, default="Würzburg")
+
+    # Geometrie & Allgemeine Daten (aus Blatt 04)
+    bgf = models.FloatField(verbose_name="BGF R", help_text="m²")
+    bri = models.FloatField(verbose_name="BRI", help_text="m³")
+    ngf = models.FloatField(verbose_name="Nutzfläche (NGF)", help_text="m²")
+
+    # Lüftung (aus Blatt 04)
+    luftwechselrate = models.FloatField(default=0.49, help_text="1/h")
+    wrg_wirkungsgrad = models.FloatField(default=0.75, verbose_name="Wirkungsgrad WRG")
+    luftvolumenstrom = models.FloatField(help_text="m³/h", blank=True, null=True)
+
+    # Klimadaten & Physik (aus Blatt 03)
+    raum_soll_temp = models.FloatField(default=20.0, verbose_name="Raum-Soll-Temperatur")
+    c_wirk_pauschal = models.FloatField(default=50, verbose_name="Speicherfähigkeit Wh/m²K")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Automatische Berechnung Volumenstrom falls leer
+        if not self.luftvolumenstrom:
+            # Vereinfachte Annahme analog Excel
+            self.luftvolumenstrom = self.bri * 0.8 * self.luftwechselrate  # V_netto * n
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class BuildingComponent(models.Model):
+    ORIENTATION_CHOICES = [
+        ('N', 'Nord'),
+        ('O', 'Ost'),
+        ('S', 'Süd'),
+        ('W', 'West'),
+        ('H', 'Horizontal/Dach'),
+        ('X', 'Keine/Erde'),
+    ]
+
+    project = models.ForeignKey(EnergyProject, on_delete=models.CASCADE, related_name='components')
+    name = models.CharField(max_length=100)  # z.B. "Massive Außenwand Süd"
+    area = models.FloatField(verbose_name="Fläche m²")
+    u_value = models.FloatField(verbose_name="U-Wert W/m²K")
+    fx_factor = models.FloatField(default=1.0, verbose_name="Temperaturkorrekturfaktor Fx")
+    orientation = models.CharField(max_length=1, choices=ORIENTATION_CHOICES, default='X')
+    g_value = models.FloatField(default=0.0, verbose_name="g-Wert (nur Fenster)", blank=True)
+
+    def ht_value(self):
+        return self.area * self.u_value * self.fx_factor
+# ============================
+# ============================
+
+# ============================
+# GROUP 10: Summer Protection (Sommerlicher Wärmeschutz)
+# ============================
+class SummerProtection(models.Model):
+    name = models.CharField(
+        max_length=100,
+        default="Sommerlicher Wärmeschutz",
+        help_text="Name des Szenarios (z.B. 'Standard Sommerfall').",
+    )
+
+    building = models.ForeignKey(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="summer_protections",
+    )
+
+    # ----------------------------
+    # Critical room (Excel Schritt 1 & 2)
+    # ----------------------------
+    ORIENTATION_CHOICES = [
+        ("N", "Nord"),
+        ("E", "Ost"),
+        ("S", "Süd"),
+        ("W", "West"),
+    ]
+    orientation = models.CharField(
+        "Fassadenorientierung (kritischer Raum)",
+        max_length=1,
+        choices=ORIENTATION_CHOICES,
+        default="S",
+    )
+
+    ngf_m2 = models.FloatField(
+        "Nettogrundfläche Raum (NGF) [m²]",
+        default=30.0,
+    )
+
+    window_area_m2 = models.FloatField(
+        "Fensterfläche (kritischer Raum) [m²]",
+        default=0.0,
+    )
+
+    # ----------------------------
+    # Fixed categories for Fc lookup (your table)
+    # ----------------------------
+    GLAZING_CATEGORY_CHOICES = [
+        ("double", "zweifach"),
+        ("triple", "dreifach"),
+        ("solar", "Sonnenschutzglas (g ≤ 0.40)"),
+    ]
+    glazing_category = models.CharField(
+        "Verglasungskategorie",
+        max_length=20,
+        choices=GLAZING_CATEGORY_CHOICES,
+        default="double",
+    )
+
+    SHADING_TYPE_CHOICES = [
+        ("none", "ohne Sonnenschutz"),                      # Zeile 1
+        ("internal", "innenliegend / zwischen Scheiben"),   # Zeile 2
+        ("roller_closed", "Rollladen geschlossen"),         # 3.1
+        ("jalousie_45", "Jalousie 45°"),                    # 3.2.1
+        ("awning", "Markise"),                              # 3.3
+        ("overhang", "Vordach / Überhang"),                 # 3.4
+    ]
+    shading_type = models.CharField(
+        "Sonnenschutztyp (kritischer Raum)",
+        max_length=30,
+        choices=SHADING_TYPE_CHOICES,
+        default="none",
+    )
+
+    # ----------------------------
+    # Step 3 inputs (Excel)
+    # ----------------------------
+    CLIMATE_REGION_CHOICES = [
+        ("A", "Klimaregion A"),
+        ("B", "Klimaregion B"),
+        ("C", "Klimaregion C"),
+    ]
+    climate_region = models.CharField(
+        "Klimaregion",
+        max_length=1,
+        choices=CLIMATE_REGION_CHOICES,
+        default="B",
+    )
+
+    NIGHT_VENT_CHOICES = [
+        ("none", "keine"),
+        ("slight", "erhöht leicht"),
+        ("strong", "erhöht stark"),
+    ]
+    night_ventilation = models.CharField(
+        "Nachtlüftung",
+        max_length=10,
+        choices=NIGHT_VENT_CHOICES,
+        default="none",
+    )
+
+    passive_cooling = models.BooleanField(
+        "Passive Kühlung vorhanden",
+        default=False,
+    )
+
+    def __str__(self):
+        return f"{self.name} ({self.orientation}) – {self.building.name}"
