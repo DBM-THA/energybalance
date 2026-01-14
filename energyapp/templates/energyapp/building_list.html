@@ -120,7 +120,13 @@
                     </td>
 
                     <!-- Aktionen: Buttons in einer Reihe mittig -->
+
                     <td class="text-center action-buttons">
+
+                        <a href="{% url 'energy_balance' b.pk %}" class="btn btn-sm btn-primary">
+                             Load Profiles
+                        </a>
+
                         <a class="btn btn-outline-primary btn-sm btn-details"
                            href="{% url 'building_detail' b.pk %}">Details</a>
 
