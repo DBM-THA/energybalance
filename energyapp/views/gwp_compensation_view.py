@@ -1,21 +1,19 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
 
-from energyapp.models import Building, GwpCompensation, GwpManufacturing
+from energyapp.models import Building, GwpCompensation
 from energyapp.forms import GwpCompensationForm
-
 
 
 def gwp_compensation_edit(request, building_id):
     building = get_object_or_404(Building, pk=building_id)
     manufacturing = getattr(building, "gwp_manufacturing", None)
 
+    # optional: erst Kompensation erlauben, wenn Herstellung existiert
     if manufacturing is None:
         return redirect("gwp_manufacturing_edit", building_id=building.id)
 
-    instance, _ = GwpCompensation.objects.get_or_create(
-        building=building, defaults={"manufacturing": manufacturing}
-    )
+    # ✅ ohne defaults={"manufacturing": ...} (weil Feld existiert nicht)
+    instance, _ = GwpCompensation.objects.get_or_create(building=building)
 
     if request.method == "POST":
         form = GwpCompensationForm(request.POST, instance=instance)
