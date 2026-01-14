@@ -1,12 +1,347 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>GWP Kompensation (Tab 07)</h2>
+<h1 class="page-title">GWP Kompensation (Tab 07)</h1>
 
-<form method="post">
-{% csrf_token %}
-{{ form.as_p }}
-<button type="submit">Speichern</button>
-<a href="{% url 'gwp_overview' building.id %}">Zurück</a>
+<form method="post" id="gwp-form" class="gwp-form" novalidate>
+  {% csrf_token %}
+
+  <!-- Eingaben -->
+  <div class="card">
+    <div class="card-head">
+      <h2>Eingaben (User)</h2>
+      <div class="chip chip-user">editierbar</div>
+    </div>
+
+    <p class="muted">
+      Energie und zugehöriger CO₂-Faktor gehören zusammen. Die CO₂-Ergebnisse werden live berechnet.
+    </p>
+
+    <!-- Fernwärme regenerativ -->
+    <div class="row">
+      <div class="field">
+        <label>Fernwärme regenerativ <span class="unit">[kWh/a]</span></label>
+        {{ form.heat_district_regen_kwh }}
+        <div class="help">Jahres-Endenergie.</div>
+      </div>
+
+      <div class="field">
+        <label>CO₂-Faktor Fernwärme regenerativ <span class="unit">[kg/kWh]</span></label>
+        {{ form.factor_heat_regen }}
+        <div class="help">Quelle: z.B. Ökobaudat.</div>
+      </div>
+
+      <div class="result">
+        <label>CO₂ <span class="unit">[kg/a]</span></label>
+        <div class="readonly" id="out-dh-regen">0.0</div>
+      </div>
+    </div>
+
+    <!-- Fernwärme durchschnitt -->
+    <div class="row">
+      <div class="field">
+        <label>Fernwärme durchschnitt <span class="unit">[kWh/a]</span></label>
+        {{ form.heat_district_avg_kwh }}
+      </div>
+
+      <div class="field">
+        <label>CO₂-Faktor Fernwärme durchschnitt <span class="unit">[kg/kWh]</span></label>
+        {{ form.factor_heat_avg }}
+      </div>
+
+      <div class="result">
+        <label>CO₂ <span class="unit">[kg/a]</span></label>
+        <div class="readonly" id="out-dh-avg">0.0</div>
+      </div>
+    </div>
+
+    <!-- Gas -->
+    <div class="row">
+      <div class="field">
+        <label>Gas <span class="unit">[kWh/a]</span></label>
+        {{ form.gas_kwh }}
+      </div>
+
+      <div class="field">
+        <label>CO₂-Faktor Gas <span class="unit">[kg/kWh]</span></label>
+        {{ form.factor_gas }}
+      </div>
+
+      <div class="result">
+        <label>CO₂ <span class="unit">[kg/a]</span></label>
+        <div class="readonly" id="out-gas">0.0</div>
+      </div>
+    </div>
+
+    <!-- Strom -->
+    <div class="row">
+      <div class="field">
+        <label>Strom <span class="unit">[kWh/a]</span></label>
+        {{ form.electricity_kwh }}
+      </div>
+
+      <div class="field">
+        <label>CO₂-Faktor Strom <span class="unit">[kg/kWh]</span></label>
+        {{ form.factor_electricity }}
+      </div>
+
+      <div class="result">
+        <label>CO₂ <span class="unit">[kg/a]</span></label>
+        <div class="readonly" id="out-elec">0.0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Berechnet -->
+  <div class="card">
+    <div class="card-head">
+      <h2>Berechnet (nicht editierbar)</h2>
+      <div class="chip chip-calc">live</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Summe Betrieb (CO₂) <span class="unit">[kg/a]</span></div>
+        <div class="kpi-value" id="out-operation-total">0.0</div>
+        <div class="kpi-sub">Summe aus Fernwärme + Gas + Strom.</div>
+      </div>
+
+      <div class="kpi hintbox">
+        <div class="kpi-label">Hinweis</div>
+        <div class="readonly hint">
+          Grau hinterlegte Werte sind berechnet oder kommen aus anderen Tabs.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn-primary" id="btn-save">Speichern</button>
+    <a href="{% url 'gwp_overview' building.id %}" class="btn-secondary">Zurück</a>
+    <span class="status" id="status-text"></span>
+  </div>
+</form>
+
+<style>
+  .gwp-form { max-width: 1100px; }
+  .page-title { margin-bottom: 10px; }
+
+  .card{
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(3px);
+  }
+
+  .card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .chip{
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    white-space: nowrap;
+  }
+  .chip-user{ opacity: .95; }
+  .chip-calc{ opacity: .95; }
+
+  .muted{ opacity:.9; margin-top: 6px; margin-bottom: 14px; }
+  .unit{ opacity:.85; font-weight: 500; }
+
+  .row{
+    display:grid;
+    grid-template-columns: 1fr 1fr 220px;
+    gap:14px;
+    align-items:end;
+    margin-bottom:14px;
+  }
+
+  .field label, .result label{
+    display:block;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+
+  .help{
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: .85;
+  }
+
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.35);
+    color:#fff;
+    outline:none;
+  }
+
+  .field input:focus{
+    border-color: rgba(30,108,255,0.8);
+    box-shadow: 0 0 0 3px rgba(30,108,255,0.18);
+  }
+
+  .field input.is-invalid{
+    border-color: rgba(255,80,80,0.95);
+    box-shadow: 0 0 0 3px rgba(255,80,80,0.18);
+  }
+
+  .readonly{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border: 1px dashed rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+    color:#fff;
+  }
+
+  .kpi-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:14px;
+  }
+
+  .kpi{
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 14px;
+    background: rgba(0,0,0,0.18);
+  }
+
+  .kpi-label{ font-weight: 700; margin-bottom: 8px; }
+  .kpi-value{
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    padding: 6px 0;
+  }
+  .kpi-sub{ opacity: .85; font-size: 12px; margin-top: 6px; }
+
+  .hintbox .readonly{ margin-top: 8px; }
+  .hint{ opacity: .9; }
+
+  .actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .btn-primary, .btn-secondary{
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:12px;
+    text-decoration:none;
+  }
+  .btn-primary{ background:#1e6cff; color:#fff; border:none; cursor:pointer; }
+  .btn-secondary{ background: rgba(255,255,255,0.12); color:#fff; }
+
+  .status{
+    margin-left: 4px;
+    opacity: .9;
+    font-size: 13px;
+  }
+
+  @media (max-width: 980px){
+    .row{ grid-template-columns: 1fr; }
+    .kpi-grid{ grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+(function() {
+  const status = document.getElementById("status-text");
+
+  function toNumber(el) {
+    if (!el) return 0;
+    const raw = String(el.value ?? "").trim().replace(",", ".");
+    const v = parseFloat(raw);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function setText(outId, value) {
+    const el = document.getElementById(outId);
+    if (!el) return;
+    el.textContent = (Math.round(value * 10) / 10).toFixed(1);
+  }
+
+  function markValidity(el) {
+    if (!el) return;
+    const v = String(el.value ?? "").trim();
+    if (v === "") { el.classList.remove("is-invalid"); return; }
+    const n = toNumber(el);
+    // negativ oder nicht-zahl → invalid
+    if (isNaN(n) || n < 0) el.classList.add("is-invalid");
+    else el.classList.remove("is-invalid");
+  }
+
+  function recalc() {
+    const dhRegenKwh = document.getElementById("id_heat_district_regen_kwh");
+    const dhRegenFac = document.getElementById("id_factor_heat_regen");
+    const dhAvgKwh   = document.getElementById("id_heat_district_avg_kwh");
+    const dhAvgFac   = document.getElementById("id_factor_heat_avg");
+    const gasKwh     = document.getElementById("id_gas_kwh");
+    const gasFac     = document.getElementById("id_factor_gas");
+    const elecKwh    = document.getElementById("id_electricity_kwh");
+    const elecFac    = document.getElementById("id_factor_electricity");
+
+    [dhRegenKwh, dhRegenFac, dhAvgKwh, dhAvgFac, gasKwh, gasFac, elecKwh, elecFac].forEach(markValidity);
+
+    const dhRegen = toNumber(dhRegenKwh) * toNumber(dhRegenFac);
+    const dhAvg   = toNumber(dhAvgKwh)   * toNumber(dhAvgFac);
+    const gas     = toNumber(gasKwh)     * toNumber(gasFac);
+    const elec    = toNumber(elecKwh)    * toNumber(elecFac);
+
+    setText("out-dh-regen", dhRegen);
+    setText("out-dh-avg", dhAvg);
+    setText("out-gas", gas);
+    setText("out-elec", elec);
+
+    const total = dhRegen + dhAvg + gas + elec;
+    setText("out-operation-total", total);
+
+    if (status) status.textContent = "Änderungen nicht gespeichert";
+  }
+
+  // bei blur Komma → Punkt normalisieren
+  function normalize(el) {
+    if (!el) return;
+    el.addEventListener("blur", () => {
+      const v = String(el.value ?? "").replace(",", ".");
+      el.value = v;
+    });
+  }
+
+  const ids = [
+    "id_heat_district_regen_kwh",
+    "id_factor_heat_regen",
+    "id_heat_district_avg_kwh",
+    "id_factor_heat_avg",
+    "id_gas_kwh",
+    "id_factor_gas",
+    "id_electricity_kwh",
+    "id_factor_electricity",
+  ];
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", recalc);
+    normalize(el);
+  });
+
+  // initial
+  recalc();
+})();
+</script>
 
 {% endblock %}
