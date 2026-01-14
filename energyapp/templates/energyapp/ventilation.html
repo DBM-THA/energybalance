@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Lüftungs-Mix Rechner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{--bg:#020617;--card:#111827;--accent:#22c55e;--danger:#ef4444;--text:#e5e7eb;--muted:#9ca3af;--input:#1f2933}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui;background:linear-gradient(120deg,#020617,#020617);color:var(--text);padding:24px}
+h1{text-align:center;margin-bottom:24px}
+.card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;align-items:center}
+.header{font-weight:600;color:var(--muted);font-size:.85rem}
+input,select{background:var(--input);border:none;border-radius:8px;padding:8px;color:var(--text);width:100%}
+button{border:none;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;background:var(--accent);color:#052e16}
+button.danger{background:var(--danger);color:#fff}
+button.secondary{background:#334155;color:var(--text)}
+.results{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
+.result-value{font-size:1.6rem;font-weight:bold}
+.big{font-size:2.2rem;color:var(--danger)}
+@media(max-width:900px){.grid,.results{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<h1>💨 Lüftungs-Mix Rechner</h1>
+
+<div class="card">
+  <label>Gesamtfläche (m²)</label>
+  <input id="totalArea" type="number" value="1000">
+
+  <label style="margin-top:10px;display:block">Strompreis (€/kWh)</label>
+  <input id="priceInput" type="number" step="0.01" value="0.40">
+</div>
+
+<div class="card">
+  <div class="grid header">
+    <div>Nutzung</div><div>%</div><div>Pers.</div><div>LW</div><div>h/Tag</div><div>Tage</div><div></div>
+  </div>
+  <div id="rows"></div>
+  <div style="margin-top:15px">
+    <button onclick="addRow()">+ Nutzung hinzufügen</button>
+    <span id="percentSum" style="margin-left:20px;font-weight:bold">Summe: 0%</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="results">
+    <div><div class="result-value" id="resV">0</div><div>m³/h</div></div>
+    <div><div class="result-value" id="resKW">0</div><div>kW</div></div>
+    <div><div class="result-value" id="resKWH">0</div><div>kWh/a</div></div>
+    <div><div class="result-value big" id="resEuro">0 €</div><div>Kosten</div></div>
+  </div>
+  <div style="margin-top:20px;text-align:center">
+    <button class="secondary" onclick="calculate()">JETZT BERECHNEN</button>
+  </div>
+</div>
+
+<!-- Script is intentionally placed at the END of body to ensure DOM is fully loaded -->
+<script>
+'use strict';
+
+// --------------------
+// Daten & Initialisierung
+// --------------------
+const categories = {
+  Büro:   [1, 1.2, 8, 250],
+  Wohnen:[1, 0.5,12, 365],
+  Schule:[2, 2.0, 6, 200],
+  Labor: [5, 4.0,10, 250]
+};
+
+const rowsDiv = document.getElementById('rows');
+const totalAreaInput = document.getElementById('totalArea');
+const priceInput = document.getElementById('priceInput');
+const percentSumLabel = document.getElementById('percentSum');
+
+// --------------------
+// UI-Funktionen
+// --------------------
+function addRow(){
+  const r = document.createElement('div');
+  r.className = 'grid';
+
+  r.innerHTML = `
+    <select onchange="fillDefaults(this)">
+      <option></option>
+      ${Object.keys(categories).map(k => `<option>${k}</option>`).join('')}
+    </select>
+    <input type="number" value="0" min="0" onchange="updatePercent()">
+    <input type="number" value="0" min="0">
+    <input type="number" value="0" min="0" step="0.1">
+    <input type="number" value="0" min="0" max="24">
+    <input type="number" value="0" min="0" max="365">
+    <button class="danger" onclick="this.parentElement.remove();updatePercent()">×</button>
+  `;
+
+  rowsDiv.appendChild(r);
+}
+
+function fillDefaults(selectEl){
+  const values = categories[selectEl.value];
+  if (!values) return;
+
+  const inputs = selectEl.parentElement.querySelectorAll('input');
+  inputs[1].value = values[0];
+  inputs[2].value = values[1];
+  inputs[3].value = values[2];
+  inputs[4].value = values[3];
+}
+
+function updatePercent(){
+  let sum = 0;
+  document.querySelectorAll('#rows input:nth-child(2)').forEach(i => {
+    sum += Number(i.value) || 0;
+  });
+
+  percentSumLabel.textContent = `Summe: ${sum}%`;
+  percentSumLabel.style.color = sum === 100 ? '#22c55e' : '#ef4444';
+}
+
+// --------------------
+// Berechnung
+// --------------------
+function calculate(){
+  // --- Prüfung: Summe der Prozente muss 100 % sein
+  let percentSum = 0;
+  document.querySelectorAll('#rows input:nth-child(2)').forEach(i => {
+    percentSum += Number(i.value) || 0;
+  });
+
+  if (percentSum !== 100) {
+    alert(`Die Summe der Anteile muss genau 100 % betragen.
+Aktuell: ${percentSum} %`);
+    return;
+  }
+
+
+  let sumV = 0, sumKW = 0, sumKWH = 0;
+
+  const area = Number(totalAreaInput.value);
+  const price = Number(priceInput.value);
+
+  document.querySelectorAll('#rows > div').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+
+    const percent = Number(inputs[0].value);
+    if (!percent) return;
+
+    const pers = Number(inputs[1].value);
+    const lw   = Number(inputs[2].value);
+    const h    = Number(inputs[3].value);
+    const d    = Number(inputs[4].value);
+
+    if (h > 24 || d > 365) {
+      alert('Ungültige Stunden oder Tage');
+      throw new Error('Ungültige Eingabewerte');
+    }
+
+    const partArea = area * percent / 100;
+    const V = Math.max(pers * 25, partArea * lw * 1.2);
+
+    const kw = ((1200 + 750) * V / 3600) / (0.8 * 0.9 * 0.99) / 1000;
+    const kwh = kw * h * d;
+
+    sumV   += V;
+    sumKW  += kw;
+    sumKWH += kwh;
+  });
+
+  document.getElementById('resV').textContent    = Math.round(sumV);
+  document.getElementById('resKW').textContent   = sumKW.toFixed(2);
+  document.getElementById('resKWH').textContent  = Math.round(sumKWH);
+  document.getElementById('resEuro').textContent = (sumKWH * price).toFixed(2) + ' €';
+}
+
+// --------------------
+// Mini-Selbsttests (Debug)
+// --------------------
+console.assert(typeof calculate === 'function', 'calculate() sollte existieren');
+console.assert(priceInput !== null, 'priceInput sollte initialisiert sein');
+console.assert(totalAreaInput !== null, 'totalAreaInput sollte initialisiert sein');
+
+// Initiale Zeile
+addRow();
+</script>
+
+</body>
+</html>
