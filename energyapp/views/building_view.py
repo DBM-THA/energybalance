@@ -591,3 +591,6 @@ def summary_dashboard(request):
             "form": form,
         },
     )
+
+def pv_details(request):
+    return render(request, "energyapp/pv_details.html")
