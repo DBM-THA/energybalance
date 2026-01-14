@@ -379,6 +379,9 @@ class GwpCompensation(models.Model):
 # ============================
 # GROUP 8: Load Profile
 from django.db import models
+from django.shortcuts import render, get_object_or_404
+from energyapp.models import Building
+#from energyapp.utils import EnergyCalculator
 # Übergangsklasse wird mit buildíngclass verknüpft
 
 class EnergyProject(models.Model):
@@ -432,6 +435,27 @@ class BuildingComponent(models.Model):
 
     def ht_value(self):
         return self.area * self.u_value * self.fx_factor
+
+
+def energy_balance_view(request, pk):
+    # 1. Das Gebäude anhand der ID (pk) laden
+    building = get_object_or_404(Building, pk=pk)
+
+    # 2. Berechnung starten (nutzt unsere utils.py)
+    calc = EnergyCalculator(building)
+    results = calc.calculate()
+
+    # 3. Daten vorbereiten
+    context = {
+        'project': building,
+        'results': results,
+        'monthly_data': results.get('monthly_data', [])
+    }
+
+    # 4. Excel-Template rendern
+    return render(request, 'energy/results.html', context)
+
+
 # ============================
 # ============================
 
