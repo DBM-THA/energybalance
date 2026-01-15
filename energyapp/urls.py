@@ -42,4 +42,5 @@ urlpatterns = [
     path("envelope/", building_view.envelope_detail, name="envelope_detail"),
     path("solar-gains/", building_view.solar_gains, name="solar_gains"),
     path("pv-details/", building_view.pv_details, name="pv_details"),
+    path("ventilation/", building_view.ventilation, name="ventilation"),
 ]
