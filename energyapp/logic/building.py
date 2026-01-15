@@ -11,6 +11,13 @@ def calc_heating_demand(building: Building) -> dict:
     h_building = storeys * h_room
 
     floor_area = length * width                      # m²
+
+    # BGF = Länge * Breite * Geschosse
+    bgf = floor_area * storeys
+
+    # NGF_t = BGF * 0,8
+    ngf_t = bgf * 0.8
+
     roof_area = floor_area                           # m²
     floor_area_ceiling = floor_area                  # m²
 
@@ -129,4 +136,8 @@ def calc_heating_demand(building: Building) -> dict:
         "Q_PV_total": Q_PV_total,
         "Q_PV_on": Q_PV_on,
         "Q_PV_off": Q_PV_off,
+
+        "bgf": bgf,
+        "ngf_t": ngf_t,
+
     }
