@@ -197,23 +197,82 @@ class GwpManufacturing(models.Model):
         related_name="gwp_manufacturing",
     )
 
-    # USER INPUT (getrennt nach Kostengruppe)
-    kg300_new = models.FloatField("KG300 neue Bauteile [kg]", default=0, validators=[MinValueValidator(0)])
-    kg400_new = models.FloatField("KG400 neue Bauteile [kg]", default=0, validators=[MinValueValidator(0)])
+    # USER INPUT (Excel-Logik)
+    # Menge/Volumen (z.B. m² oder m³) + spez. CO2 (kg/m² oder kg/m³)
+    kg300_new_qty = models.FloatField(
+        "KG300 neue Bauteile Menge [m²/m³]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    kg300_new_factor = models.FloatField(
+        "KG300 neue Bauteile spez. CO2 [kg/(m² oder m³)]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
 
-    kg300_existing = models.FloatField("KG300 Bestandsbauteile [kg]", default=0, validators=[MinValueValidator(0)])
-    kg400_existing = models.FloatField("KG400 Bestandsbauteile [kg]", default=0, validators=[MinValueValidator(0)])
+    kg400_new_qty = models.FloatField(
+        "KG400 neue Bauteile Menge [m²/m³]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    kg400_new_factor = models.FloatField(
+        "KG400 neue Bauteile spez. CO2 [kg/(m² oder m³)]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
 
-    service_life_years = models.FloatField("Nutzungsdauer [a]", default=50, validators=[MinValueValidator(1)])
+    kg300_existing_qty = models.FloatField(
+        "KG300 Bestandsbauteile Menge [m²/m³]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    kg300_existing_factor = models.FloatField(
+        "KG300 Bestandsbauteile spez. CO2 [kg/(m² oder m³)]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
 
-    # BERECHNET (nicht speichern)
+    kg400_existing_qty = models.FloatField(
+        "KG400 Bestandsbauteile Menge [m²/m³]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    kg400_existing_factor = models.FloatField(
+        "KG400 Bestandsbauteile spez. CO2 [kg/(m² oder m³)]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+
+    service_life_years = models.FloatField(
+        "Nutzungsdauer [a]",
+        default=50,
+        validators=[MinValueValidator(1)],
+    )
+
+    # BERECHNET (entspricht Excel-Spalte J etc.)
+    @property
+    def kg300_new(self):
+        return (self.kg300_new_qty or 0) * (self.kg300_new_factor or 0)
+
+    @property
+    def kg400_new(self):
+        return (self.kg400_new_qty or 0) * (self.kg400_new_factor or 0)
+
+    @property
+    def kg300_existing(self):
+        return (self.kg300_existing_qty or 0) * (self.kg300_existing_factor or 0)
+
+    @property
+    def kg400_existing(self):
+        return (self.kg400_existing_qty or 0) * (self.kg400_existing_factor or 0)
+
     @property
     def new_components_gwp(self):
-        return (self.kg300_new or 0) + (self.kg400_new or 0)
+        return self.kg300_new + self.kg400_new
 
     @property
     def existing_components_gwp(self):
-        return (self.kg300_existing or 0) + (self.kg400_existing or 0)
+        return self.kg300_existing + self.kg400_existing
 
     @property
     def total_gwp(self):
@@ -233,6 +292,7 @@ class GwpManufacturing(models.Model):
 
     def __str__(self):
         return f"GWP Herstellung ({self.building})"
+
 
 
 
