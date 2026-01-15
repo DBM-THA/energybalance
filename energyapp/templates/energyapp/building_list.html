@@ -121,6 +121,11 @@
 
                     <!-- Aktionen: Buttons in einer Reihe mittig -->
                     <td class="text-center action-buttons">
+                        <a href="{% url 'gwp_overview' b.pk %}"
+                           class="btn btn-outline-success btn-sm me-2">
+                            GWP
+                        </a>
+
                         <a class="btn btn-outline-primary btn-sm btn-details"
                            href="{% url 'building_detail' b.pk %}">Details</a>
 
