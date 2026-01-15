@@ -7,8 +7,7 @@ from energyapp.views.gwp_compensation_view import gwp_compensation_edit
 
 urlpatterns = [
     path("", building_view.dashboard, name="dashboard"),
-    path("calculator/", building_view.building_create_simple, name="building_create"),
-    path("calculator/simple/", building_view.building_create_simple, name="calculator_simple"),
+    path("calculator/", building_view.building_create_detailed, name="building_create"),
     path("calculator/detailed/", building_view.building_create_detailed, name="calculator_detailed"),
     path("buildings/", building_view.building_list, name="building_list"),
     path("buildings/<int:pk>/", building_view.building_detail, name="building_detail"),
