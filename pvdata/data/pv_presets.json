@@ -1,0 +1,18 @@
+{
+  "presets": [
+    {
+      "building_id": "B-1001",
+      "name": "Mustergebäude 1",
+      "annual_demand_kwh": 25906,
+      "eta_total": 0.140194,
+      "area_m2": null,
+      "radiation_kwh_m2": [70, 65, 85, 110, 135, 150, 155, 140, 110, 90, 60, 50],
+      "meta": {
+        "city": "Beispielstadt",
+        "climate_region": 13,
+        "tilt_deg": 90,
+        "orientation": "S"
+      }
+    }
+  ]
+}

@@ -1,5 +1,15 @@
 from dataclasses import dataclass
 from typing import List, Dict, Any
+from pathlib import Path
+from pvdata.repositories.json_repo import JsonPresetRepository
+from pvdata.services.preset_service import PresetService
+
+repo = JsonPresetRepository(Path(__file__).resolve().parent / "data" / "pv_presets.json")
+service = PresetService(repo)
+
+preset = service.get_preset(building_id)
+# preset.annual_demand_kwh, preset.eta_total, preset.radiation_kwh_m2, preset.area_m2 ...
+
 
 MONTHS = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
 
