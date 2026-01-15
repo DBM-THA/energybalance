@@ -4,6 +4,7 @@ from .views import summer_steps as summer_steps_views
 from energyapp.views.gwp_manufacturing_view import gwp_manufacturing_edit, gwp_overview
 from energyapp.views.gwp_compensation_view import gwp_compensation_edit
 
+
 urlpatterns = [
     path("", building_view.dashboard, name="dashboard"),
     path("calculator/", building_view.building_create_simple, name="building_create"),
