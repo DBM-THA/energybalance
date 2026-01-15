@@ -1,0 +1,5 @@
+.pv-container { max-width: 980px; margin: 24px auto; padding: 12px; font-family: Arial, sans-serif; }
+.pv-card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+button { padding: 10px 14px; cursor: pointer; }

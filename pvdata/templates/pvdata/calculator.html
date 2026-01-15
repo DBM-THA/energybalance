@@ -1,0 +1,52 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PV Rechner</title>
+  <link rel="stylesheet" href="{% static 'pvdata/style.css' %}">
+</head>
+<body>
+
+<div class="pv-container">
+  <h1>PV-Rechner</h1>
+
+  <form method="post" class="pv-card">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Berechnen</button>
+  </form>
+
+  {% if result %}
+    <div class="pv-card">
+      <h2>Ergebnis</h2>
+      <p><b>PV-Fläche:</b> {{ result.inputs.area_m2 }} m² ({{ result.inputs.area_source }})</p>
+      <p><b>Jahresproduktion:</b> {{ result.summary.annual_production_kwh }} kWh</p>
+      <p><b>Deckungsgrad:</b> {{ result.summary.coverage_ratio }}</p>
+
+      <h3>Monatstabelle</h3>
+      <table>
+        <thead>
+        <tr>
+          <th>Monat</th>
+          <th>Strahlung (kWh/m²)</th>
+          <th>Produktion (kWh)</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in result.monthly %}
+          <tr>
+            <td>{{ row.month }}</td>
+            <td>{{ row.radiation_kwh_m2 }}</td>
+            <td>{{ row.production_kwh }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+
+</body>
+</html>
