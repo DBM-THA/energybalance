@@ -551,6 +551,9 @@ def solar_gains(request):
     # Platzhalter – später durch richtigen Inhalt ersetzen
     return render(request, "energyapp/solar_gains.html")
 
+def ventilation(request):
+    # Platzhalter – später durch richtigen Inhalt ersetzen
+    return render(request, "energyapp/ventilation.html")
 
 def building_detail(request, pk):
     """
@@ -602,3 +605,6 @@ def summary_dashboard(request):
             "form": form,
         },
     )
+
+def pv_details(request):
+    return render(request, "energyapp/pv_details.html")

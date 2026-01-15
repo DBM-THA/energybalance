@@ -1,5 +1,4 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
 
 from energyapp.models import Building, GwpManufacturing, GwpCompensation
 from energyapp.forms import GwpManufacturingForm
