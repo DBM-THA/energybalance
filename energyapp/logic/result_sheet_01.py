@@ -53,10 +53,14 @@ def build_external_sources(building: Building) -> ExternalSources:
     Minimal sinnvolle Zuordnung zu deinem aktuellen Datenmodell:
     - Heizwärmebedarf: building.result_Q_h (kommt aus deiner calc_heating_demand)
     - PV: building.result_Q_PV_total
-    - NGF_t: wir nehmen building.result_floor_area als Näherung (oder 0)
     Alles andere ist aktuell nicht im Modell: bleibt 0.
     """
-    ngf = _num(building.result_floor_area)
+
+    # Excel: NGF_t (Name Manager) -> bei uns: building.ngf_t
+    ngf = _num(getattr(building, "ngf_t", None))
+    if ngf <= 0:
+        # Fallback für Altbestand ohne ngf_t
+        ngf = _num(building.result_floor_area)
 
     return ExternalSources(
         # Excel-Quelle: ='03 MONATSBILANZ'!O76

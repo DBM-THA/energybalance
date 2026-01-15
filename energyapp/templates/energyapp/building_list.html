@@ -121,6 +121,10 @@
 
                     <!-- Aktionen: Buttons in einer Reihe mittig -->
                     <td class="text-center action-buttons">
+                        <a class="btn btn-outline-success btn-sm"
+                            href="{% url 'summary_dashboard' %}?building={{ b.pk }}"
+                            title="01 Ergebnis Energie">Summary</a>
+
                         <a href="{% url 'gwp_overview' b.pk %}"
                            class="btn btn-outline-success btn-sm me-2">
                             GWP
