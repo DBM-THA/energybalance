@@ -112,19 +112,28 @@ class GwpManufacturingForm(forms.ModelForm):
     class Meta:
         model = GwpManufacturing
         fields = [
-            "kg300_new",
-            "kg300_existing",
-            "kg400_new",
-            "kg400_existing",
+            "kg300_new_qty", "kg300_new_factor",
+            "kg300_existing_qty", "kg300_existing_factor",
+            "kg400_new_qty", "kg400_new_factor",
+            "kg400_existing_qty", "kg400_existing_factor",
             "service_life_years",
         ]
         widgets = {
-            "kg300_new": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-            "kg300_existing": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-            "kg400_new": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
-            "kg400_existing": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "kg300_new_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "kg300_new_factor": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+
+            "kg300_existing_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "kg300_existing_factor": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+
+            "kg400_new_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "kg400_new_factor": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+
+            "kg400_existing_qty": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+            "kg400_existing_factor": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+
             "service_life_years": forms.NumberInput(attrs={"step": "1", "min": "1"}),
         }
+
 
 
 
@@ -145,6 +154,3 @@ class GwpCompensationForm(forms.ModelForm):
             "factor_gas",
             "factor_electricity",
         ]
-
-
-
