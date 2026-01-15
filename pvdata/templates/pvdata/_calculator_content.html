@@ -1,13 +1,6 @@
 {% load static %}
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PV Rechner</title>
-  <link rel="stylesheet" href="{% static 'pvdata/style.css' %}">
-</head>
-<body>
+
+<link rel="stylesheet" href="{% static 'pvdata/style.css' %}">
 
 <div class="pv-container">
   <h1>PV-Rechner</h1>
@@ -21,9 +14,11 @@
   {% if result %}
     <div class="pv-card">
       <h2>Ergebnis</h2>
-      <p><b>PV-Fläche:</b> {{ result.inputs.area_m2 }} m² ({{ result.inputs.area_source }})</p>
+      <p><b>PV-Fläche:</b> {{ result.inputs.total_area_m2 }} m²</p>
       <p><b>Jahresproduktion:</b> {{ result.summary.annual_production_kwh }} kWh</p>
       <p><b>Deckungsgrad:</b> {{ result.summary.coverage_ratio }}</p>
+      <p><b>Eigenverbrauch:</b> {{ result.summary.self_use_kwh }} kWh</p>
+      <p><b>Überschuss:</b> {{ result.summary.surplus_kwh }} kWh</p>
 
       <h3>Monatstabelle</h3>
       <table>
@@ -47,6 +42,3 @@
     </div>
   {% endif %}
 </div>
-
-</body>
-</html>

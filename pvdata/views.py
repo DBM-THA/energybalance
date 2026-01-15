@@ -1,73 +1,48 @@
-import json
-from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.clickjacking import xframe_options_exempt
-from django.views.decorators.http import require_http_methods
+from .forms import PVCalcForm, PVMainForm, PVSurfaceFormSet
+from .pv_calc import PVInputs, PVSurface, compute_pv
 
-from .forms import PVCalcForm
-from .pv_calc import PVInputs, compute_pv
-from .presets import get_pv_preset_by_pk
-
-def pv_calculator(request):
-    preset = None
-    building_pk = request.GET.get("building")
-
-    initial = {}
-    if building_pk:
-        preset = get_pv_preset_by_pk(int(building_pk))
-        initial = {
-            "annual_demand_kwh": preset.annual_demand_kwh,
-            "eta_total": preset.eta_total,
-            "area_m2": preset.area_m2,
-        }
-        # Monatswerte in rad_01..rad_12
-        for i, val in enumerate(preset.radiation_kwh_m2, start=1):
-            initial[f"rad_{i:02d}"] = val
-
-    form = PVCalcForm(request.POST or None, initial=initial if request.method != "POST" else None)
-    ...
-
-
-@xframe_options_exempt  # erlaubt Einbettung per iFrame (wenn ihr das nutzt)
-@require_http_methods(["GET", "POST"])
-def pv_calculator(request):
+def pv_details(request):
     result = None
-    form = PVCalcForm(request.POST or None)
 
-    if request.method == "POST" and form.is_valid():
-        radiation = [form.cleaned_data[f"rad_{i:02d}"] for i in range(1, 13)]
-        area = form.cleaned_data.get("area_m2") or None
+    # Hauptformular
+    main_form = PVCalcForm(request.POST or None)
+
+    # Formset für Flächen
+    surface_formset = PVSurfaceFormSet(request.POST or None)
+
+    if request.method == "POST" and main_form.is_valid() and surface_formset.is_valid():
+        cd = main_form.cleaned_data
+
+        radiation = [
+            cd["rad_01"], cd["rad_02"], cd["rad_03"], cd["rad_04"],
+            cd["rad_05"], cd["rad_06"], cd["rad_07"], cd["rad_08"],
+            cd["rad_09"], cd["rad_10"], cd["rad_11"], cd["rad_12"],
+        ]
+
+        surfaces = []
+        for f in surface_formset.cleaned_data:
+            if not f:
+                continue
+            surfaces.append(PVSurface(
+                name=f.get("name") or "",
+                orientation=f["orientation"],
+                tilt_deg=f["tilt_deg"],
+                area_m2=f["area_m2"],
+                eta=f["eta"],
+            ))
 
         inputs = PVInputs(
-            annual_demand_kwh=form.cleaned_data["annual_demand_kwh"],
-            eta_total=form.cleaned_data["eta_total"],
+            annual_demand_kwh=cd["annual_demand_kwh"],
+            self_consumption_share=cd["self_consumption_share"],
             radiation_kwh_m2=radiation,
-            area_m2=area,
+            surfaces=surfaces,
         )
+
         result = compute_pv(inputs)
 
-    return render(request, "pvdata/calculator.html", {"form": form, "result": result})
-
-
-@require_http_methods(["POST"])
-def pv_compute_api(request):
-    """
-    POST JSON:
-    {
-      "annual_demand_kwh": 25906,
-      "eta_total": 0.140194,
-      "area_m2": null,
-      "radiation_kwh_m2": [..12..]
-    }
-    """
-    try:
-        payload = json.loads(request.body.decode("utf-8"))
-        inputs = PVInputs(
-            annual_demand_kwh=float(payload["annual_demand_kwh"]),
-            eta_total=float(payload["eta_total"]),
-            radiation_kwh_m2=[float(x) for x in payload["radiation_kwh_m2"]],
-            area_m2=None if payload.get("area_m2") in (None, "", "null") else float(payload["area_m2"]),
-        )
-        return JsonResponse(compute_pv(inputs), json_dumps_params={"ensure_ascii": False})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
+    return render(request, "energyapp/pv_details.html", {
+        "main_form": main_form,
+        "surface_formset": surface_formset,
+        "result": result,
+    })

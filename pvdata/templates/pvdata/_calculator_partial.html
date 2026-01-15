@@ -1,0 +1,32 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'pvdata/style.css' %}">
+
+<div class="pv-container">
+  <h1>PV-Rechner</h1>
+
+  <form method="post" class="pv-card">
+    {% csrf_token %}
+
+    {{ main_form.as_p }}
+
+    <h2>PV-Flächen</h2>
+    {{ surface_formset.management_form }}
+
+    {% for f in surface_formset %}
+      <div class="pv-card" style="margin-top:12px">
+        {{ f.as_p }}
+      </div>
+    {% endfor %}
+
+    <button type="submit">Berechnen</button>
+  </form>
+
+  {% if result %}
+    <div class="pv-card">
+      <h2>Ergebnis</h2>
+      <p><b>Jahresproduktion:</b> {{ result.summary.annual_production_kwh }} kWh</p>
+      <p><b>Deckungsgrad:</b> {{ result.summary.coverage_ratio }}</p>
+    </div>
+  {% endif %}
+</div>

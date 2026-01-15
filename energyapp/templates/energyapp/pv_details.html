@@ -1,8 +1,21 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1>PV-Anlage – Details</h1>
-    <p>Platzhalter – Inhalt folgt.</p>
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <a href="/pv/" class="btn btn-outline-primary">PV-Rechner</a>
+      <h1 class="mt-3">PV-Anlage – Details</h1>
+      <p class="text-muted mb-0">Berechnung und Eingaben für PV-Flächen.</p>
+    </div>
+  </div>
+
+  {# Optional: extra CSS nur für PV (wenn base keinen head-block hat, siehe Hinweis unten) #}
+  <link rel="stylesheet" href="{% static 'pvdata/style.css' %}">
+
+  {% include "pvdata/_calculator_partial.html" %}
+
 </div>
 {% endblock %}

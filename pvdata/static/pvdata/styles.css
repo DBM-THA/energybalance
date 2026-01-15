@@ -1,5 +1,13 @@
-.pv-container { max-width: 980px; margin: 24px auto; padding: 12px; font-family: Arial, sans-serif; }
-.pv-card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 16px 0; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
-button { padding: 10px 14px; cursor: pointer; }
+.pv-wrap { max-width: 1100px; margin: 0 auto; }
+.pv-card { padding: 16px; margin-bottom: 16px; }
+.pv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pv-grid--surface { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.pv-field label { display:block; font-weight: 600; margin-bottom: 6px; }
+.pv-field input, .pv-field select { width: 100%; padding: 8px; }
+.pv-months { display:grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.pv-surfaces { display:grid; gap: 12px; margin-top: 10px; }
+.pv-kpis { display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.pv-kpi { padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
+.pv-kpi-label { font-size: 12px; opacity: .7; }
+.pv-kpi-value { font-size: 18px; font-weight: 700; }
+.pv-tablewrap { overflow:auto; }
