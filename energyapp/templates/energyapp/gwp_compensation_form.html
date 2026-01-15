@@ -4,11 +4,9 @@
 <h2>GWP Kompensation (Tab 07)</h2>
 
 <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button class="btn btn-primary" type="submit">Speichern</button>
-</form>
-
+{% csrf_token %}
+{{ form.as_p }}
+<button type="submit">Speichern</button>
 <a href="{% url 'gwp_overview' building.id %}">Zurück</a>
 
 {% endblock %}

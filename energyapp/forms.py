@@ -53,6 +53,7 @@ class BuildingForm(forms.ModelForm):
             "pv_specific_yield",
             "pv_self_consumption_share",
         ]
+        
 class Sheet01EnergyResultForm(forms.ModelForm):
     class Meta:
         model = Sheet01EnergyResult
@@ -185,10 +186,17 @@ class GwpManufacturingForm(forms.ModelForm):
     class Meta:
         model = GwpManufacturing
         fields = [
-            "new_components_gwp",
-            "existing_components_gwp",
+            "kg300_new",
+            "kg400_new",
+            "kg300_existing",
+            "kg400_existing",
             "service_life_years",
         ]
+
+
+from django import forms
+from .models import GwpCompensation
+
 
 class GwpCompensationForm(forms.ModelForm):
     class Meta:
@@ -198,5 +206,10 @@ class GwpCompensationForm(forms.ModelForm):
             "heat_district_avg_kwh",
             "gas_kwh",
             "electricity_kwh",
+            "factor_heat_regen",
+            "factor_heat_avg",
+            "factor_gas",
+            "factor_electricity",
         ]
+
 
