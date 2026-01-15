@@ -13,23 +13,50 @@
     </div>
 
     <p class="muted">
-      Eingaben sind nach Kostengruppen getrennt. Summen und pro-Jahr-Werte werden live berechnet.
+      Eingaben sind nach Kostengruppen getrennt. Emissionen werden aus Menge × Faktor berechnet.
+      Summen und pro-Jahr-Werte werden live berechnet.
     </p>
 
     <!-- KG300 -->
     <h3 class="section-title">Kostengruppe 300</h3>
     <div class="row">
       <div class="field">
-        <label>KG300 neue Bauteile <span class="unit">[kg]</span></label>
-        {{ form.kg300_new }}
+        <label>KG300 neu – Menge <span class="unit">[m²/m³]</span></label>
+        {{ form.kg300_new_qty }}
       </div>
       <div class="field">
-        <label>KG300 Bestandsbauteile <span class="unit">[kg]</span></label>
-        {{ form.kg300_existing }}
+        <label>KG300 neu – spez. CO₂ <span class="unit">[kg/(m² oder m³)]</span></label>
+        {{ form.kg300_new_factor }}
       </div>
       <div class="result">
+        <label>KG300 neu – Ergebnis <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg300-new">0.0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>KG300 Bestand – Menge <span class="unit">[m²/m³]</span></label>
+        {{ form.kg300_existing_qty }}
+      </div>
+      <div class="field">
+        <label>KG300 Bestand – spez. CO₂ <span class="unit">[kg/(m² oder m³)]</span></label>
+        {{ form.kg300_existing_factor }}
+      </div>
+      <div class="result">
+        <label>KG300 Bestand – Ergebnis <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg300-existing">0.0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="result wide">
         <label>Summe KG300 <span class="unit">[kg]</span></label>
         <div class="readonly" id="out-kg300-total">0.0</div>
+      </div>
+      <div class="result wide">
+        <label>&nbsp;</label>
+        <div class="readonly hint">Summe aus (KG300 neu + KG300 Bestand)</div>
       </div>
     </div>
 
@@ -37,16 +64,42 @@
     <h3 class="section-title">Kostengruppe 400</h3>
     <div class="row">
       <div class="field">
-        <label>KG400 neue Bauteile <span class="unit">[kg]</span></label>
-        {{ form.kg400_new }}
+        <label>KG400 neu – Menge <span class="unit">[m²/m³]</span></label>
+        {{ form.kg400_new_qty }}
       </div>
       <div class="field">
-        <label>KG400 Bestandsbauteile <span class="unit">[kg]</span></label>
-        {{ form.kg400_existing }}
+        <label>KG400 neu – spez. CO₂ <span class="unit">[kg/(m² oder m³)]</span></label>
+        {{ form.kg400_new_factor }}
       </div>
       <div class="result">
+        <label>KG400 neu – Ergebnis <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg400-new">0.0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>KG400 Bestand – Menge <span class="unit">[m²/m³]</span></label>
+        {{ form.kg400_existing_qty }}
+      </div>
+      <div class="field">
+        <label>KG400 Bestand – spez. CO₂ <span class="unit">[kg/(m² oder m³)]</span></label>
+        {{ form.kg400_existing_factor }}
+      </div>
+      <div class="result">
+        <label>KG400 Bestand – Ergebnis <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg400-existing">0.0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="result wide">
         <label>Summe KG400 <span class="unit">[kg]</span></label>
         <div class="readonly" id="out-kg400-total">0.0</div>
+      </div>
+      <div class="result wide">
+        <label>&nbsp;</label>
+        <div class="readonly hint">Summe aus (KG400 neu + KG400 Bestand)</div>
       </div>
     </div>
 
@@ -290,19 +343,30 @@
   }
 
   function recalc() {
-    const kg300New = document.getElementById("id_kg300_new");
-    const kg300Ex  = document.getElementById("id_kg300_existing");
-    const kg400New = document.getElementById("id_kg400_new");
-    const kg400Ex  = document.getElementById("id_kg400_existing");
-    const lifeEl   = document.getElementById("id_service_life_years");
+    const kg300NewQty = document.getElementById("id_kg300_new_qty");
+    const kg300NewFac = document.getElementById("id_kg300_new_factor");
+    const kg300ExQty  = document.getElementById("id_kg300_existing_qty");
+    const kg300ExFac  = document.getElementById("id_kg300_existing_factor");
 
-    [kg300New, kg300Ex, kg400New, kg400Ex, lifeEl].forEach(markValidity);
+    const kg400NewQty = document.getElementById("id_kg400_new_qty");
+    const kg400NewFac = document.getElementById("id_kg400_new_factor");
+    const kg400ExQty  = document.getElementById("id_kg400_existing_qty");
+    const kg400ExFac  = document.getElementById("id_kg400_existing_factor");
 
-    const kg300_new = toNumber(kg300New);
-    const kg300_ex  = toNumber(kg300Ex);
-    const kg400_new = toNumber(kg400New);
-    const kg400_ex  = toNumber(kg400Ex);
-    const life      = Math.max(1, toNumber(lifeEl));
+    const lifeEl      = document.getElementById("id_service_life_years");
+
+    [
+      kg300NewQty, kg300NewFac, kg300ExQty, kg300ExFac,
+      kg400NewQty, kg400NewFac, kg400ExQty, kg400ExFac,
+      lifeEl
+    ].forEach(markValidity);
+
+    const life = Math.max(1, toNumber(lifeEl));
+
+    const kg300_new = toNumber(kg300NewQty) * toNumber(kg300NewFac);
+    const kg300_ex  = toNumber(kg300ExQty)  * toNumber(kg300ExFac);
+    const kg400_new = toNumber(kg400NewQty) * toNumber(kg400NewFac);
+    const kg400_ex  = toNumber(kg400ExQty)  * toNumber(kg400ExFac);
 
     const kg300_total = kg300_new + kg300_ex;
     const kg400_total = kg400_new + kg400_ex;
@@ -315,8 +379,14 @@
     const ex_per_year  = ex_total / life;
     const total_per_year = total_gwp / life;
 
+    setText("out-kg300-new", kg300_new);
+    setText("out-kg300-existing", kg300_ex);
+    setText("out-kg400-new", kg400_new);
+    setText("out-kg400-existing", kg400_ex);
+
     setText("out-kg300-total", kg300_total);
     setText("out-kg400-total", kg400_total);
+
     setText("out-new-total", new_total);
     setText("out-existing-total", ex_total);
     setText("out-total-gwp", total_gwp);
@@ -335,10 +405,10 @@
   }
 
   const ids = [
-    "id_kg300_new",
-    "id_kg300_existing",
-    "id_kg400_new",
-    "id_kg400_existing",
+    "id_kg300_new_qty", "id_kg300_new_factor",
+    "id_kg300_existing_qty", "id_kg300_existing_factor",
+    "id_kg400_new_qty", "id_kg400_new_factor",
+    "id_kg400_existing_qty", "id_kg400_existing_factor",
     "id_service_life_years"
   ];
 
