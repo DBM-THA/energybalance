@@ -6,6 +6,26 @@ from django.views.decorators.http import require_http_methods
 
 from .forms import PVCalcForm
 from .pv_calc import PVInputs, compute_pv
+from .presets import get_pv_preset_by_pk
+
+def pv_calculator(request):
+    preset = None
+    building_pk = request.GET.get("building")
+
+    initial = {}
+    if building_pk:
+        preset = get_pv_preset_by_pk(int(building_pk))
+        initial = {
+            "annual_demand_kwh": preset.annual_demand_kwh,
+            "eta_total": preset.eta_total,
+            "area_m2": preset.area_m2,
+        }
+        # Monatswerte in rad_01..rad_12
+        for i, val in enumerate(preset.radiation_kwh_m2, start=1):
+            initial[f"rad_{i:02d}"] = val
+
+    form = PVCalcForm(request.POST or None, initial=initial if request.method != "POST" else None)
+    ...
 
 
 @xframe_options_exempt  # erlaubt Einbettung per iFrame (wenn ihr das nutzt)

@@ -3,7 +3,9 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("energyapp.urls")),  # unsere App
+    path("", include("energyapp.urls")),
+    path("pv/", include("pvdata.urls")),
+    # unsere App
 ]
 path("", include("energyapp.urls")),
 
@@ -13,3 +15,4 @@ urlpatterns = [
     # ... eure bestehenden Routen ...
     path("pv/", include("pvdata.urls")),   # <- HIER
 ]
+
