@@ -43,6 +43,8 @@ def building_create_detailed(request):
 
             # Berechnung durchführen
             result = calc_heating_demand(building)
+            building.ngf_t = result["ngf_t"]
+
 
             # Ergebnisse ins Modell schreiben
             building.result_Q_T = result["Q_T"]
@@ -84,7 +86,10 @@ def building_create_detailed(request):
     }
     return render(request, "energyapp/building_form.html", context)
 
+from django.http import Http404
+
 def building_create_simple(request):
+    raise Http404("Simple calculation mode has been removed")
     if request.method == "POST":
         form = SimpleBuildingForm(request.POST)
         if form.is_valid():
@@ -92,6 +97,8 @@ def building_create_simple(request):
 
             # Berechnung durchführen
             result = calc_heating_demand(building)
+            building.ngf_t = result["ngf_t"]
+
 
             # Ergebnisse ins Modell schreiben
             building.result_Q_T = result["Q_T"]
@@ -181,6 +188,8 @@ def building_edit(request, pk):
 
             # Berechnung erneut durchführen
             result = calc_heating_demand(building)
+            building.ngf_t = result["ngf_t"]
+
 
             building.result_Q_T = result["Q_T"]
             building.result_Q_V = result["Q_V"]
@@ -544,6 +553,9 @@ def solar_gains(request):
     # Platzhalter – später durch richtigen Inhalt ersetzen
     return render(request, "energyapp/solar_gains.html")
 
+def ventilation(request):
+    # Platzhalter – später durch richtigen Inhalt ersetzen
+    return render(request, "energyapp/ventilation.html")
 
 def building_detail(request, pk):
     """
@@ -554,7 +566,12 @@ def building_detail(request, pk):
     return render(request, "energyapp/building_detail.html", {"building": building})
 
 def summary_dashboard(request):
-    building = Building.objects.order_by("-id").first()
+    building_id = request.GET.get("building")
+    if building_id:
+        building = get_object_or_404(Building, pk=building_id)
+    else:
+        building = Building.objects.order_by("-id").first()
+
 
     energy_input = None
     energy_results = None
@@ -575,3 +592,9 @@ def summary_dashboard(request):
             "building": building,
         },
     )
+
+def pv_details(request):
+    return render(request, "energyapp/pv_details.html")
+
+def ventilation(request):
+    return render(request, "energyapp/ventilation.html")

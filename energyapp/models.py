@@ -14,6 +14,10 @@ class Building(models.Model):
     storeys = models.IntegerField("Geschosse")
     room_height = models.FloatField("Raumhöhe [m]")
 
+    # Abgeleitete Bezugsfläche (Excel: NGF_t = BGF * 0,8)
+    ngf_t = models.FloatField("NGF_t [m²]", null=True, blank=True)
+
+
     # U-Werte
     u_wall = models.FloatField("U-Wert Außenwand [W/m²K]")
     u_roof = models.FloatField("U-Wert Dach [W/m²K]")
@@ -178,6 +182,77 @@ class Layer(models.Model):
 # ============================
 # GROUP 4: Ventilation
 # ============================
+
+# ----------------------------
+# 4A: Nutzungskategorien (Stammdaten)
+# ----------------------------
+class VentilationUsageCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    std_persons = models.FloatField("Standard Personen", default=0)
+    std_air_change = models.FloatField("Standard Luftwechsel [1/h]", default=0)
+    std_hours_per_day = models.FloatField("Standard h/Tag", default=0)
+    std_days_per_year = models.FloatField("Standard Tage/Jahr", default=0)
+
+    def __str__(self):
+        return self.name
+
+
+# ----------------------------
+# 4B: Lüftungs-Szenario (Kopfbereich)
+# ----------------------------
+class VentilationScenario(models.Model):
+    building = models.OneToOneField(
+        'Building',
+        on_delete=models.CASCADE,
+        related_name="ventilation",
+    )
+
+    total_area = models.FloatField("Gesamtfläche [m²]")
+    electricity_price = models.FloatField("Strompreis [€/kWh]", default=0.40)
+
+    # optionale Ergebnis-Speicherung
+    result_volume_flow = models.FloatField(null=True, blank=True)  # m³/h
+    result_power_kw = models.FloatField(null=True, blank=True)     # kW
+    result_energy_kwh = models.FloatField(null=True, blank=True)   # kWh/a
+    result_costs_eur = models.FloatField(null=True, blank=True)    # €/a
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Lüftung – {self.building.name}"
+
+
+# ----------------------------
+# 4C: Einzelne Nutzungslinien (UI-Zeilen)
+# ----------------------------
+class VentilationUsageShare(models.Model):
+    scenario = models.ForeignKey(
+        VentilationScenario,
+        on_delete=models.CASCADE,
+        related_name="usages",
+    )
+
+    category = models.ForeignKey(
+        VentilationUsageCategory,
+        on_delete=models.PROTECT,
+        related_name="usage_shares",
+    )
+
+    share_percent = models.FloatField("Anteil [%]")
+    persons = models.FloatField("Personen")
+    air_change_rate = models.FloatField("Luftwechsel [1/h]")
+    hours_per_day = models.FloatField("Betriebsstunden [h/Tag]")
+    days_per_year = models.FloatField("Betriebstage [d/a]")
+
+    # optionale Ergebniswerte pro Nutzung
+    result_volume_flow = models.FloatField(null=True, blank=True)  # m³/h
+    result_power_kw = models.FloatField(null=True, blank=True)
+    result_energy_kwh = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.category.name} – {self.share_percent}%"
+
+
 
 # ============================
 # GROUP 5: Lighting & Water

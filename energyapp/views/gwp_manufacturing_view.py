@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from energyapp.models import Building, GwpManufacturing
+
+from energyapp.models import Building, GwpManufacturing, GwpCompensation
 from energyapp.forms import GwpManufacturingForm
 
 def gwp_manufacturing_edit(request, building_id):
