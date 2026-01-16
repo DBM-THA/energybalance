@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import building_view
 from .views import summer_steps as summer_steps_views
+from .views import summer as summer_views
 from energyapp.views.gwp_manufacturing_view import gwp_manufacturing_edit
 from energyapp.views.gwp_overview import gwp_overview
 from energyapp.views.gwp_compensation_view import gwp_compensation_edit
@@ -21,6 +22,7 @@ urlpatterns = [
     path("summer/", summer_steps_views.summer_step1, name="summer"),
     path("summer/step1/", summer_steps_views.summer_step1, name="summer_step1"),
     path("summer/step2/", summer_steps_views.summer_step2, name="summer_step2"),
+    path("summer/fc-info/", summer_views.fc_info, name="fc_info"),
     path("summary-dashboard/", building_view.summary_dashboard, name="summary_dashboard"),
     path("internal-gains/", building_view.internal_gains, name="internal_gains"),
     path(
