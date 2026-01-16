@@ -2,13 +2,13 @@ from django.urls import path
 from .views import building_view
 from .views import summer_steps as summer_steps_views
 from .views import summer as summer_views
-from energyapp.views.gwp_manufacturing_view import gwp_manufacturing_edit, gwp_overview
+from energyapp.views.gwp_manufacturing_view import gwp_manufacturing_edit
+from energyapp.views.gwp_overview import gwp_overview
 from energyapp.views.gwp_compensation_view import gwp_compensation_edit
 
 urlpatterns = [
     path("", building_view.dashboard, name="dashboard"),
-    path("calculator/", building_view.building_create_simple, name="building_create"),
-    path("calculator/simple/", building_view.building_create_simple, name="calculator_simple"),
+    path("calculator/", building_view.building_create_detailed, name="building_create"),
     path("calculator/detailed/", building_view.building_create_detailed, name="calculator_detailed"),
     path("buildings/", building_view.building_list, name="building_list"),
     path("buildings/<int:pk>/", building_view.building_detail, name="building_detail"),
@@ -42,4 +42,6 @@ urlpatterns = [
     ),
     path("envelope/", building_view.envelope_detail, name="envelope_detail"),
     path("solar-gains/", building_view.solar_gains, name="solar_gains"),
+    path("pv-details/", building_view.pv_details, name="pv_details"),
+    path("ventilation/", building_view.ventilation, name="ventilation"),
 ]

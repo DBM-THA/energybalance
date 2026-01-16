@@ -1,7 +1,21 @@
 from django.contrib import admin
-from .models import Building
+
+from .models import Building, GwpManufacturing, GwpCompensation
 
 
+# ---------- Inline: GWP Herstellung direkt im Building ----------
+class GwpManufacturingInline(admin.StackedInline):
+    model = GwpManufacturing
+    extra = 0
+    max_num = 1
+    can_delete = False
+
+    # readonly: wenn total_* noch nicht existiert, ignorieren wir sie unten per try/except nicht,
+    # daher lassen wir hier nur die Felder, die sicher existieren:
+    readonly_fields = ("new_per_year", "existing_per_year")
+
+
+# ---------- Building Admin (dein bestehender Admin + Inline) ----------
 @admin.register(Building)
 class BuildingAdmin(admin.ModelAdmin):
     # Spalten in der Übersicht
@@ -112,7 +126,6 @@ class BuildingAdmin(admin.ModelAdmin):
                 )
             },
         ),
-
         (
             "Berechnungsergebnisse",
             {
@@ -140,6 +153,9 @@ class BuildingAdmin(admin.ModelAdmin):
         ),
     )
 
+    # ✅ HIER: Inline einbauen
+    inlines = [GwpManufacturingInline]
+
     # kleine Helfer für Liste
     def floor_area_display(self, obj):
         if obj.result_floor_area is None:
@@ -155,7 +171,24 @@ class BuildingAdmin(admin.ModelAdmin):
 
     result_Q_h_display.short_description = "Q_h [kWh/a]"
 
-from .models import GwpManufacturing, GwpCompensation
 
-admin.site.register(GwpManufacturing)
-admin.site.register(GwpCompensation)
+# ---------- GWP Herstellung Admin Liste ----------
+@admin.register(GwpManufacturing)
+class GwpManufacturingAdmin(admin.ModelAdmin):
+    list_display = (
+        "building",
+        "new_components_gwp",
+        "existing_components_gwp",
+        "service_life_years",
+        "new_per_year",
+        "existing_per_year",
+    )
+    list_select_related = ("building",)
+    readonly_fields = ("new_per_year", "existing_per_year")
+
+
+# ---------- GWP Kompensation Admin Liste ----------
+@admin.register(GwpCompensation)
+class GwpCompensationAdmin(admin.ModelAdmin):
+    list_display = ("building",)
+    list_select_related = ("building",)

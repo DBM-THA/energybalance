@@ -3,9 +3,10 @@ from io import BytesIO
 
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from energyapp.forms import BuildingForm,SimpleBuildingForm
+from energyapp.forms import BuildingForm,SimpleBuildingForm, Sheet01EnergyResultForm, EnergyResultSheet01Form
 from energyapp.logic.building import calc_heating_demand
-from energyapp.models import Building
+from energyapp.models import Building, Sheet01EnergyResult, EnergyResultSheet01
+from energyapp.logic.result_sheet_01 import calculate_sheet01
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -43,6 +44,8 @@ def building_create_detailed(request):
 
             # Berechnung durchführen
             result = calc_heating_demand(building)
+            building.ngf_t = result["ngf_t"]
+
 
             # Ergebnisse ins Modell schreiben
             building.result_Q_T = result["Q_T"]
@@ -84,7 +87,10 @@ def building_create_detailed(request):
     }
     return render(request, "energyapp/building_form.html", context)
 
+from django.http import Http404
+
 def building_create_simple(request):
+    raise Http404("Simple calculation mode has been removed")
     if request.method == "POST":
         form = SimpleBuildingForm(request.POST)
         if form.is_valid():
@@ -92,6 +98,8 @@ def building_create_simple(request):
 
             # Berechnung durchführen
             result = calc_heating_demand(building)
+            building.ngf_t = result["ngf_t"]
+
 
             # Ergebnisse ins Modell schreiben
             building.result_Q_T = result["Q_T"]
@@ -181,6 +189,8 @@ def building_edit(request, pk):
 
             # Berechnung erneut durchführen
             result = calc_heating_demand(building)
+            building.ngf_t = result["ngf_t"]
+
 
             building.result_Q_T = result["Q_T"]
             building.result_Q_V = result["Q_V"]
@@ -544,6 +554,9 @@ def solar_gains(request):
     # Platzhalter – später durch richtigen Inhalt ersetzen
     return render(request, "energyapp/solar_gains.html")
 
+def ventilation(request):
+    # Platzhalter – später durch richtigen Inhalt ersetzen
+    return render(request, "energyapp/ventilation.html")
 
 def building_detail(request, pk):
     """
@@ -554,24 +567,50 @@ def building_detail(request, pk):
     return render(request, "energyapp/building_detail.html", {"building": building})
 
 def summary_dashboard(request):
-    building = Building.objects.order_by("-id").first()
+    building_id = request.GET.get("building")
+    if building_id:
+        building = get_object_or_404(Building, pk=building_id)
+    else:
+        building = Building.objects.order_by("-id").first()
 
-    energy_input = None
-    energy_results = None
 
-    if building and hasattr(building, "energy_input"):
-        energy_input = building.energy_input
+    if not building:
+        return render(
+            request,
+            "energyapp/summary_dashboard.html",
+            {
+                "building": None,
+                "sheet": None,
+                "calc": {},
+                "form": None,
+            },
+        )
 
-        # Berechnung einfügen (wenn vorhanden)
-        from energyapp.logic.energy_calculator import calculate_energy_results
-        energy_results = calculate_energy_results(energy_input)
+    sheet, _ = EnergyResultSheet01.objects.get_or_create(building=building)
+
+    if request.method == "POST":
+        form = EnergyResultSheet01Form(request.POST, instance=sheet)
+        if form.is_valid():
+            sheet = form.save()
+            return redirect("summary_dashboard")
+    else:
+        form = EnergyResultSheet01Form(instance=sheet)
+
+    calc = calculate_sheet01(building, sheet)
 
     return render(
         request,
         "energyapp/summary_dashboard.html",
         {
-            "energy_input": energy_input,
-            "energy_results": energy_results,
             "building": building,
+            "sheet": sheet,
+            "calc": calc,
+            "form": form,
         },
     )
+
+def pv_details(request):
+    return render(request, "energyapp/pv_details.html")
+
+def ventilation(request):
+    return render(request, "energyapp/ventilation.html")
