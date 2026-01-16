@@ -87,7 +87,10 @@ def building_create_detailed(request):
     }
     return render(request, "energyapp/building_form.html", context)
 
+from django.http import Http404
+
 def building_create_simple(request):
+    raise Http404("Simple calculation mode has been removed")
     if request.method == "POST":
         form = SimpleBuildingForm(request.POST)
         if form.is_valid():
@@ -608,3 +611,6 @@ def summary_dashboard(request):
 
 def pv_details(request):
     return render(request, "energyapp/pv_details.html")
+
+def ventilation(request):
+    return render(request, "energyapp/ventilation.html")
