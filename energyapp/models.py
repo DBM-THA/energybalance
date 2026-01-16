@@ -12,6 +12,10 @@ class Building(models.Model):
     storeys = models.IntegerField("Geschosse")
     room_height = models.FloatField("Raumhöhe [m]")
 
+    # Abgeleitete Bezugsfläche (Excel: NGF_t = BGF * 0,8)
+    ngf_t = models.FloatField("NGF_t [m²]", null=True, blank=True)
+
+
     # U-Werte
     u_wall = models.FloatField("U-Wert Außenwand [W/m²K]")
     u_roof = models.FloatField("U-Wert Dach [W/m²K]")
