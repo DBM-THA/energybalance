@@ -48,10 +48,13 @@
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot class="table-dark">
-                            <tr>
-                                <td colspan="4" class="text-end">Gesamtheizwärmebedarf:</td>
-                                <td>{{ results.annual_heating_demand }} kWh/a</td>
+
+                        <tfoot class="bg-primary text-white border-top border-3">
+                            <tr class="align-middle" style="height: 50px;">
+                                <td colspan="4" class="text-end fw-bold">Gesamtheizwärmebedarf:</td>
+                                <td class="fw-bold fs-5">
+                                    {{ results.annual_heating_demand }} kWh/a
+                                </td>
                             </tr>
                         </tfoot>
                     </table>

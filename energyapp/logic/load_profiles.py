@@ -2,6 +2,7 @@ import math
 
 
 class EnergyCalculator:
+
     def __init__(self, building):
         self.b = building
         # Monatsdaten (aus deinem Excel Blatt 03)
