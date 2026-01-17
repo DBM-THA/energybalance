@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import building_view
 from .views import summer_steps as summer_steps_views
-from energyapp.views.gwp_manufacturing_view import gwp_manufacturing_edit, gwp_overview
+from energyapp.views.gwp_manufacturing_view import gwp_manufacturing_edit
+from energyapp.views.gwp_overview import gwp_overview
 from energyapp.views.gwp_compensation_view import gwp_compensation_edit
 from .views.load_profile import energy_balance_view
 urlpatterns = [
@@ -42,4 +43,6 @@ urlpatterns = [
     path("solar-gains/", building_view.solar_gains, name="solar_gains"),
     path('building/<int:pk>/bilanz/', energy_balance_view, name='energy_balance'),
 
+    path("pv-details/", building_view.pv_details, name="pv_details"),
+    path("ventilation/", building_view.ventilation, name="ventilation"),
 ]

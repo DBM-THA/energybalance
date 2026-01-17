@@ -126,6 +126,13 @@
 
                         <a href="{% url 'energy_balance' b.pk %}" class="btn btn-sm btn-primary">
                              Load Profiles
+                        <a class="btn btn-outline-success btn-sm"
+                            href="{% url 'summary_dashboard' %}?building={{ b.pk }}"
+                            title="01 Ergebnis Energie">Summary</a>
+
+                        <a href="{% url 'gwp_overview' b.pk %}"
+                           class="btn btn-outline-success btn-sm me-2">
+                            GWP
                         </a>
 
                         <a class="btn btn-outline-primary btn-sm btn-details"

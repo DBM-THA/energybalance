@@ -226,7 +226,14 @@
 
     <div class="col-md-6">
         <fieldset>
-            <legend>PV-Anlage</legend>
+            <legend class="d-flex align-items-center">
+                <span>PV-Anlage</span>
+                <a href="{% url 'pv_details' %}"
+                   class="btn btn-outline-secondary btn-sm ms-2">
+                    Details
+                </a>
+            </legend>
+
             <div class="mb-3">
                 {{ form.pv_roof_share.label_tag }}
                 {{ form.pv_roof_share|add_class:"form-control" }}

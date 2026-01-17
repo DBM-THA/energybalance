@@ -12,6 +12,10 @@ class Building(models.Model):
     storeys = models.IntegerField("Geschosse")
     room_height = models.FloatField("Raumhöhe [m]")
 
+    # Abgeleitete Bezugsfläche (Excel: NGF_t = BGF * 0,8)
+    ngf_t = models.FloatField("NGF_t [m²]", null=True, blank=True)
+
+
     # U-Werte
     u_wall = models.FloatField("U-Wert Außenwand [W/m²K]")
     u_roof = models.FloatField("U-Wert Dach [W/m²K]")
@@ -279,8 +283,76 @@ class InternalGains(models.Model):
 # ============================
 # GROUP 4: Ventilation
 # ============================
-class Ventilation(models.Model):
-    dummy = models.CharField(max_length=100)
+
+# ----------------------------
+# 4A: Nutzungskategorien (Stammdaten)
+# ----------------------------
+class VentilationUsageCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    std_persons = models.FloatField("Standard Personen", default=0)
+    std_air_change = models.FloatField("Standard Luftwechsel [1/h]", default=0)
+    std_hours_per_day = models.FloatField("Standard h/Tag", default=0)
+    std_days_per_year = models.FloatField("Standard Tage/Jahr", default=0)
+
+    def __str__(self):
+        return self.name
+
+
+# ----------------------------
+# 4B: Lüftungs-Szenario (Kopfbereich)
+# ----------------------------
+class VentilationScenario(models.Model):
+    building = models.OneToOneField(
+        'Building',
+        on_delete=models.CASCADE,
+        related_name="ventilation",
+    )
+
+    total_area = models.FloatField("Gesamtfläche [m²]")
+    electricity_price = models.FloatField("Strompreis [€/kWh]", default=0.40)
+
+    # optionale Ergebnis-Speicherung
+    result_volume_flow = models.FloatField(null=True, blank=True)  # m³/h
+    result_power_kw = models.FloatField(null=True, blank=True)     # kW
+    result_energy_kwh = models.FloatField(null=True, blank=True)   # kWh/a
+    result_costs_eur = models.FloatField(null=True, blank=True)    # €/a
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Lüftung – {self.building.name}"
+
+
+# ----------------------------
+# 4C: Einzelne Nutzungslinien (UI-Zeilen)
+# ----------------------------
+class VentilationUsageShare(models.Model):
+    scenario = models.ForeignKey(
+        VentilationScenario,
+        on_delete=models.CASCADE,
+        related_name="usages",
+    )
+
+    category = models.ForeignKey(
+        VentilationUsageCategory,
+        on_delete=models.PROTECT,
+        related_name="usage_shares",
+    )
+
+    share_percent = models.FloatField("Anteil [%]")
+    persons = models.FloatField("Personen")
+    air_change_rate = models.FloatField("Luftwechsel [1/h]")
+    hours_per_day = models.FloatField("Betriebsstunden [h/Tag]")
+    days_per_year = models.FloatField("Betriebstage [d/a]")
+
+    # optionale Ergebniswerte pro Nutzung
+    result_volume_flow = models.FloatField(null=True, blank=True)  # m³/h
+    result_power_kw = models.FloatField(null=True, blank=True)
+    result_energy_kwh = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.category.name} – {self.share_percent}%"
+
 
 
 # ============================
@@ -295,20 +367,39 @@ class Water(models.Model):
 # ============================
 # GROUP 6: GWP - Herstellung
 # ============================
+from django.db import models
+from django.core.validators import MinValueValidator
+
+
 class GwpManufacturing(models.Model):
     building = models.OneToOneField(
-        Building,
+        "Building",
         on_delete=models.CASCADE,
         related_name="gwp_manufacturing",
     )
 
+    # USER INPUT (getrennt nach Kostengruppe)
+    kg300_new = models.FloatField("KG300 neue Bauteile [kg]", default=0, validators=[MinValueValidator(0)])
+    kg400_new = models.FloatField("KG400 neue Bauteile [kg]", default=0, validators=[MinValueValidator(0)])
 
-    # USER INPUT (Excel 06, Spalte G)
-    new_components_gwp = models.FloatField("Herstellung neue Bauteile [kg]", default=0)
-    existing_components_gwp = models.FloatField("Herstellung Bestandsbauteile [kg]", default=0)
-    service_life_years = models.FloatField("Nutzungsdauer [a]", default=50)
+    kg300_existing = models.FloatField("KG300 Bestandsbauteile [kg]", default=0, validators=[MinValueValidator(0)])
+    kg400_existing = models.FloatField("KG400 Bestandsbauteile [kg]", default=0, validators=[MinValueValidator(0)])
 
-    # BERECHNET (nicht speichern!)
+    service_life_years = models.FloatField("Nutzungsdauer [a]", default=50, validators=[MinValueValidator(1)])
+
+    # BERECHNET (nicht speichern)
+    @property
+    def new_components_gwp(self):
+        return (self.kg300_new or 0) + (self.kg400_new or 0)
+
+    @property
+    def existing_components_gwp(self):
+        return (self.kg300_existing or 0) + (self.kg400_existing or 0)
+
+    @property
+    def total_gwp(self):
+        return self.new_components_gwp + self.existing_components_gwp
+
     @property
     def new_per_year(self):
         return self.new_components_gwp / self.service_life_years if self.service_life_years else 0
@@ -317,67 +408,146 @@ class GwpManufacturing(models.Model):
     def existing_per_year(self):
         return self.existing_components_gwp / self.service_life_years if self.service_life_years else 0
 
+    @property
+    def total_per_year(self):
+        return self.total_gwp / self.service_life_years if self.service_life_years else 0
+
+    def __str__(self):
+        return f"GWP Herstellung ({self.building})"
+
+
+
 # ============================
 # GROUP 7: GWP - Kompensation
 # ============================
+from django.db import models
+from django.core.validators import MinValueValidator
+
+
 class GwpCompensation(models.Model):
     building = models.OneToOneField(
-        Building,
+        "Building",
         on_delete=models.CASCADE,
         related_name="gwp_compensation",
     )
-    manufacturing = models.OneToOneField(
-        GwpManufacturing,
-        on_delete=models.CASCADE,
-        related_name="compensation",
+
+    # =========================
+    # USER INPUT (Excel 07) – Endenergie [kWh/a]
+    # =========================
+    heat_district_regen_kwh = models.FloatField(
+        "Fernwärme regenerativ [kWh/a]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    heat_district_avg_kwh = models.FloatField(
+        "Fernwärme durchschnitt [kWh/a]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    gas_kwh = models.FloatField(
+        "Gas [kWh/a]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    electricity_kwh = models.FloatField(
+        "Strom [kWh/a]",
+        default=0,
+        validators=[MinValueValidator(0)],
     )
 
+    # =========================
+    # CO2-FAKTOREN (kg/kWh)
+    # =========================
+    factor_heat_regen = models.FloatField(
+        "CO₂-Faktor Fernwärme regenerativ [kg/kWh]",
+        default=0.0,
+        validators=[MinValueValidator(0)],
+    )
+    factor_heat_avg = models.FloatField(
+        "CO₂-Faktor Fernwärme durchschnitt [kg/kWh]",
+        default=0.28,
+        validators=[MinValueValidator(0)],
+    )
+    factor_gas = models.FloatField(
+        "CO₂-Faktor Gas [kg/kWh]",
+        default=0.201,
+        validators=[MinValueValidator(0)],
+    )
+    factor_electricity = models.FloatField(
+        "CO₂-Faktor Strom [kg/kWh]",
+        default=0.3538,
+        validators=[MinValueValidator(0)],
+    )
 
-    # USER INPUT (Excel 07, Spalte G) – Endenergie [kWh/a]
-    heat_district_regen_kwh = models.FloatField("Fernwärme regenerativ [kWh/a]", default=0)
-    heat_district_avg_kwh   = models.FloatField("Fernwärme durchschnitt [kWh/a]", default=0)
-    gas_kwh                 = models.FloatField("Gas [kWh/a]", default=0)
-    electricity_kwh         = models.FloatField("Strom [kWh/a]", default=0)
+    # =========================
+    # HELPERS
+    # =========================
+    @property
+    def manufacturing(self):
+        """
+        Holt Manufacturing über das Building (OneToOne: building.gwp_manufacturing).
+        Gibt None zurück, wenn noch keine Manufacturing-Daten existieren.
+        """
+        return getattr(self.building, "gwp_manufacturing", None)
 
-    # Faktoren (nicht in DB speichern – NICHT user input)
-    FACTOR_HEAT = 0.28
-    FACTOR_GAS = 0.201
-    FACTOR_ELECTRICITY = 0.3538
-
-    # --- Nutzungs-Emissionen (wie Excel 07 Schritt 1) ---
+    # =========================
+    # BERECHNUNGEN (Excel 07 Schritt 1)
+    # =========================
     @property
     def gwp_heat_district_regen(self):
-        return self.heat_district_regen_kwh * self.FACTOR_HEAT
+        return self.heat_district_regen_kwh * self.factor_heat_regen
 
     @property
     def gwp_heat_district_avg(self):
-        return self.heat_district_avg_kwh * self.FACTOR_HEAT
+        return self.heat_district_avg_kwh * self.factor_heat_avg
 
     @property
     def gwp_gas(self):
-        return self.gas_kwh * self.FACTOR_GAS
+        return self.gas_kwh * self.factor_gas
 
     @property
     def gwp_electricity(self):
-        return self.electricity_kwh * self.FACTOR_ELECTRICITY
+        return self.electricity_kwh * self.factor_electricity
 
-    # --- Summen (wie Excel 07 "Summe ohne/mit Bestandsbauteilen") ---
     @property
-    def sum_without_existing(self):
+    def operation_total_per_year(self):
+        """Summe Nutzung (ohne Herstellung) pro Jahr"""
         return (
             self.gwp_heat_district_regen
             + self.gwp_heat_district_avg
             + self.gwp_gas
             + self.gwp_electricity
-            + self.manufacturing.new_per_year
         )
+
+    # =========================
+    # SUMMEN WIE IM EXCEL (ohne/mit Bestandsbauteilen)
+    # =========================
+    @property
+    def sum_without_existing(self):
+        """
+        Nutzung + Herstellung neu pro Jahr
+        (Excel: Summe ohne Bestandsbauteile)
+        """
+        m = self.manufacturing
+        new_per_year = m.new_per_year if m else 0
+        return self.operation_total_per_year + new_per_year
 
     @property
     def sum_with_existing(self):
-        return self.sum_without_existing + self.manufacturing.existing_per_year
+        """
+        Nutzung + Herstellung neu + Herstellung Bestand pro Jahr
+        (Excel: Summe mit Bestandsbauteilen)
+        """
+        m = self.manufacturing
+        existing_per_year = m.existing_per_year if m else 0
+        return self.sum_without_existing + existing_per_year
+
+    def __str__(self):
+        return f"GwpCompensation(Building={self.building_id})"
 
 # ============================
 # GROUP 8: Load Profile
+# ============================
 from django.db import models
 from django.shortcuts import render, get_object_or_404
 from energyapp.models import Building
