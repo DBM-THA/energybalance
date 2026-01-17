@@ -55,6 +55,7 @@
     </form>
 </div>
 
+
 <!-- TABELLE -->
 <div class="page-building-list">
     <div class="container my-4">
@@ -120,7 +121,11 @@
                     </td>
 
                     <!-- Aktionen: Buttons in einer Reihe mittig -->
+
                     <td class="text-center action-buttons">
+
+                        <a href="{% url 'energy_balance' b.pk %}" class="btn btn-sm btn-primary">
+                             Load Profiles
                         <a class="btn btn-outline-success btn-sm"
                             href="{% url 'summary_dashboard' %}?building={{ b.pk }}"
                             title="01 Ergebnis Energie">Summary</a>

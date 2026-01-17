@@ -1,81 +1,84 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Energiebilanz: {{ project.name }}</h2>
-    <p>Standort: {{ project.standort }} | Nutzfläche: {{ project.ngf }} m²</p>
+<form method="POST" class="container mt-4">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-dark text-white fw-bold">🏠 Gebäude-Parameter</div>
+                <div class="card-body bg-light row g-2">
+                    <div class="col-6"><label class="small">Länge N/S [m]</label><input type="number" step="0.1" name="length_ns" class="form-control" value="{{ project.length_ns }}"></div>
+                    <div class="col-6"><label class="small">Breite O/W [m]</label><input type="number" step="0.1" name="width_ow" class="form-control" value="{{ project.width_ow }}"></div>
+                    <div class="col-6"><label class="small">Geschosse</label><input type="number" name="storeys" class="form-control" value="{{ project.storeys }}"></div>
+                    <div class="col-6"><label class="small">Raumhöhe [m]</label><input type="number" step="0.1" name="room_height" class="form-control" value="{{ project.room_height }}"></div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">Ergebnis Lastgang (Zusammenfassung)</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <h5>Heizwärmebedarf</h5>
-                    <h2 class="text-danger">{{ results.annual_heating_demand }} kWh/a</h2>
+                    <div class="col-12 mt-3 fw-bold small text-muted">Thermische Hülle (U-Werte)</div>
+                    <div class="col-6"><label class="small">Wand</label><input type="number" step="0.01" name="u_wall" class="form-control" value="{{ project.u_wall }}"></div>
+                    <div class="col-6"><label class="small">Dach</label><input type="number" step="0.01" name="u_roof" class="form-control" value="{{ project.u_roof }}"></div>
+                    <div class="col-6"><label class="small">Fenster</label><input type="number" step="0.01" name="u_window" class="form-control" value="{{ project.u_window }}"></div>
+                    <div class="col-6"><label class="small">Solltemp.</label><input type="number" step="0.5" name="setpoint_temp" class="form-control" value="{{ project.setpoint_temp }}"></div>
                 </div>
-                <div class="col-md-3">
-                    <h5>Spezifisch</h5>
-                    <h2 class="text-danger">{{ results.specific_demand }} kWh/m²a</h2>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow">💾 Speichern & Berechnen</button>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow border-primary mb-4">
+                <div class="card-header bg-primary text-white">📊 03 Monatsbilanz / 04 Lastgang</div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0 text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Monat</th>
+                                <th>Außentemp.</th>
+                                <th class="text-danger">Verluste [kWh]</th>
+                                <th class="text-success">Gewinne [kWh]</th>
+                                <th class="table-warning">Bedarf Q_h</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in results.monthly_data %}
+                            <tr>
+                                <td class="fw-bold">{{ m.month }}</td>
+                                <td>{{ m.temp }} °C</td>
+                                <td class="text-danger">{{ m.q_loss }}</td>
+                                <td class="text-success">{{ m.q_gain }}</td>
+                                <td class="fw-bold">{{ m.q_h }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                        <tfoot class="bg-primary text-white border-top border-3">
+                            <tr class="align-middle" style="height: 50px;">
+                                <td colspan="4" class="text-end fw-bold">Gesamtheizwärmebedarf:</td>
+                                <td class="fw-bold fs-5">
+                                    {{ results.annual_heating_demand }} kWh/a
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
-                <div class="col-md-3">
-                    <small>H_T (Transmission): {{ results.h_t }} W/K</small><br>
-                    <small>H_V (Lüftung): {{ results.h_v }} W/K</small>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="p-3 bg-white border rounded text-center shadow-sm">
+                        <small class="text-muted">NGF</small><br><strong>{{ results.geometry.ngf }} m²</strong>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-3 bg-white border rounded text-center shadow-sm">
+                        <small class="text-muted">BRI</small><br><strong>{{ results.geometry.bri }} m³</strong>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-3 bg-white border rounded text-center shadow-sm">
+                        <small class="text-muted">Spez. Bedarf</small><br><strong>{{ results.specific_demand }} kWh/m²a</strong>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <h3>Monatsbilanz</h3>
-    <div class="table-responsive">
-        <table class="table table-bordered table-sm text-center table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>Monat</th>
-                    <th>Temp (°C)</th>
-                    <th class="table-warning">Q_Trans (kWh)</th>
-                    <th class="table-warning">Q_Lüft (kWh)</th>
-                    <th>Summe Verlust</th>
-                    <th class="table-success">Q_Intern (kWh)</th>
-                    <th class="table-success">Q_Solar (kWh)</th>
-                    <th>Summe Gewinn</th>
-                    <th>Verh. G/V</th>
-                    <th>Ausnutz. η</th>
-                    <th class="table-danger">Heizwärme (kWh)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in monthly_data %}
-                <tr>
-                    <td class="fw-bold">{{ row.month }}</td>
-                    <td>{{ row.temp }}</td>
-                    <td>{{ row.q_t }}</td>
-                    <td>{{ row.q_v }}</td>
-                    <td class="fw-bold">{{ row.q_loss }}</td>
-                    <td>{{ row.q_i }}</td>
-                    <td>{{ row.q_s }}</td>
-                    <td class="fw-bold">{{ row.q_gain }}</td>
-                    <td>{{ row.gamma }}</td>
-                    <td>{{ row.eta }}</td>
-                    <td class="bg-danger text-white fw-bold">{{ row.q_h }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            <tfoot>
-                <tr class="fw-bold table-active">
-                    <td>Summe</td>
-                    <td>-</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>{{ results.annual_heating_demand }}</td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-</div>
+</form>
 {% endblock %}
