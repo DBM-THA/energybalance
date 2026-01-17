@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 900px;">
+    <div class="card">
+        <div class="card-header">
+            Fc-Werte – Sonnenschutz (DIN 4108-2)
+        </div>
+        <div class="card-body text-center">
+            <p class="text-muted mb-3">
+                Referenztabelle zur Auswahl des Sonnenschutztyps (Fc-Wert)
+            </p>
+
+            <img src="{% static 'img/fc-werte.png' %}"
+                 alt="Fc-Werte Sonnenschutz"
+                 class="img-fluid rounded border">
+
+            <div class="mt-4">
+                <a href="javascript:history.back()" class="btn btn-outline-primary">
+                    ← zurück
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,39 +1,426 @@
 {% extends "base.html" %}
-
-
 {% block content %}
-<h1>06 – Herstellung (Eingabe)</h1>
-<p><b>Gebäude:</b> {{ building.name }}</p>
 
-<form method="post">
+<h1 class="page-title">GWP Herstellung (Tab 06)</h1>
+
+<form method="post" id="manu-form" class="gwp-form" novalidate>
   {% csrf_token %}
 
-  <h3>Kostengruppe 300</h3>
-  <label>KG300 neue Bauteile [kg]</label><br>
-  <input type="number" step="0.01" min="0" name="kg300_new" value="{{ manufacturing.kg300_new|floatformat:1 }}"><br><br>
+  <div class="card">
+    <div class="card-head">
+      <h2>Eingaben (User)</h2>
+      <div class="chip chip-user">editierbar</div>
+    </div>
 
-  <label>KG300 Bestandsbauteile [kg]</label><br>
-  <input type="number" step="0.01" min="0" name="kg300_existing" value="{{ manufacturing.kg300_existing|floatformat:1 }}"><br><br>
+    <p class="muted">
+      Eingaben sind nach Kostengruppen getrennt. Emissionen werden aus Menge × Faktor berechnet.
+      Summen und pro-Jahr-Werte werden live berechnet.
+    </p>
 
-  <h3>Kostengruppe 400</h3>
-  <label>KG400 neue Bauteile [kg]</label><br>
-  <input type="number" step="0.01" min="0" name="kg400_new" value="{{ manufacturing.kg400_new|floatformat:1 }}"><br><br>
+    <!-- KG300 -->
+    <h3 class="section-title">Kostengruppe 300</h3>
+    <div class="row">
+      <div class="field">
+        <label>KG300 neu – Menge <span class="unit">[m²/m³]</span></label>
+        {{ form.kg300_new_qty }}
+      </div>
+      <div class="field">
+        <label>KG300 neu – spez. CO₂ <span class="unit">[kg/(m² oder m³)]</span></label>
+        {{ form.kg300_new_factor }}
+      </div>
+      <div class="result">
+        <label>KG300 neu – Ergebnis <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg300-new">0.0</div>
+      </div>
+    </div>
 
-  <label>KG400 Bestandsbauteile [kg]</label><br>
-  <input type="number" step="0.01" min="0" name="kg400_existing" value="{{ manufacturing.kg400_existing|floatformat:1 }}"><br><br>
+    <div class="row">
+      <div class="field">
+        <label>KG300 Bestand – Menge <span class="unit">[m²/m³]</span></label>
+        {{ form.kg300_existing_qty }}
+      </div>
+      <div class="field">
+        <label>KG300 Bestand – spez. CO₂ <span class="unit">[kg/(m² oder m³)]</span></label>
+        {{ form.kg300_existing_factor }}
+      </div>
+      <div class="result">
+        <label>KG300 Bestand – Ergebnis <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg300-existing">0.0</div>
+      </div>
+    </div>
 
-  <label>Nutzungsdauer [a]</label><br>
-  <input type="number" step="1" min="1" name="service_life_years" value="{{ manufacturing.service_life_years|floatformat:0 }}"><br><br>
+    <div class="row">
+      <div class="result wide">
+        <label>Summe KG300 <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg300-total">0.0</div>
+      </div>
+      <div class="result wide">
+        <label>&nbsp;</label>
+        <div class="readonly hint">Summe aus (KG300 neu + KG300 Bestand)</div>
+      </div>
+    </div>
 
-  <button type="submit">Speichern</button>
-  <a style="margin-left:10px;" href="{% url 'gwp_overview' building.id %}">Zurück zur Übersicht</a>
+    <!-- KG400 -->
+    <h3 class="section-title">Kostengruppe 400</h3>
+    <div class="row">
+      <div class="field">
+        <label>KG400 neu – Menge <span class="unit">[m²/m³]</span></label>
+        {{ form.kg400_new_qty }}
+      </div>
+      <div class="field">
+        <label>KG400 neu – spez. CO₂ <span class="unit">[kg/(m² oder m³)]</span></label>
+        {{ form.kg400_new_factor }}
+      </div>
+      <div class="result">
+        <label>KG400 neu – Ergebnis <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg400-new">0.0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>KG400 Bestand – Menge <span class="unit">[m²/m³]</span></label>
+        {{ form.kg400_existing_qty }}
+      </div>
+      <div class="field">
+        <label>KG400 Bestand – spez. CO₂ <span class="unit">[kg/(m² oder m³)]</span></label>
+        {{ form.kg400_existing_factor }}
+      </div>
+      <div class="result">
+        <label>KG400 Bestand – Ergebnis <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg400-existing">0.0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="result wide">
+        <label>Summe KG400 <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-kg400-total">0.0</div>
+      </div>
+      <div class="result wide">
+        <label>&nbsp;</label>
+        <div class="readonly hint">Summe aus (KG400 neu + KG400 Bestand)</div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Nutzungsdauer <span class="unit">[a]</span></label>
+        {{ form.service_life_years }}
+        <div class="help">Min. 1 Jahr. Beeinflusst pro-Jahr-Werte.</div>
+      </div>
+      <div class="result wide">
+        <label>Hinweis</label>
+        <div class="readonly hint">
+          Grau hinterlegte Werte sind berechnet und nicht editierbar.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Berechnet (nicht editierbar)</h2>
+      <div class="chip chip-calc">live</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Summe neu (KG300+KG400) <span class="unit">[kg]</span></div>
+        <div class="kpi-value" id="out-new-total">0.0</div>
+        <div class="kpi-sub">Nur neue Bauteile (300+400).</div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-label">Summe Bestand (KG300+KG400) <span class="unit">[kg]</span></div>
+        <div class="kpi-value" id="out-existing-total">0.0</div>
+        <div class="kpi-sub">Nur Bestandsbauteile (300+400).</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Neu pro Jahr <span class="unit">[kg/a]</span></div>
+        <div class="kpi-value" id="out-new-per-year">0.0</div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-label">Bestand pro Jahr <span class="unit">[kg/a]</span></div>
+        <div class="kpi-value" id="out-existing-per-year">0.0</div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="result wide">
+        <label>Total (neu+Bestand) <span class="unit">[kg]</span></label>
+        <div class="readonly" id="out-total-gwp">0.0</div>
+      </div>
+      <div class="result wide">
+        <label>Total pro Jahr <span class="unit">[kg/a]</span></label>
+        <div class="readonly" id="out-total-per-year">0.0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn-primary">Speichern</button>
+    <a href="{% url 'gwp_overview' building.id %}" class="btn-secondary">Zurück</a>
+    <span class="status" id="status-text"></span>
+  </div>
 </form>
 
-<hr>
+<style>
+  .gwp-form { max-width: 1100px; }
+  .page-title { margin-bottom: 10px; }
 
-<h3>Berechnet</h3>
-<p>Summe neu (KG300+400): {{ manufacturing.new_components_gwp|floatformat:1 }} kg</p>
-<p>Summe Bestand (KG300+400): {{ manufacturing.existing_components_gwp|floatformat:1 }} kg</p>
-<p>Neu pro Jahr: {{ manufacturing.new_per_year|floatformat:1 }} kg/a</p>
-<p>Bestand pro Jahr: {{ manufacturing.existing_per_year|floatformat:1 }} kg/a</p>
+  .card{
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(3px);
+  }
+
+  .card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .chip{
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    white-space: nowrap;
+  }
+  .chip-user{ opacity: .95; }
+  .chip-calc{ opacity: .95; }
+
+  .muted{ opacity:.9; margin-top: 6px; margin-bottom: 14px; }
+  .unit{ opacity:.85; font-weight: 500; }
+
+  .section-title { margin: 14px 0 8px; opacity: 0.95; }
+
+  .row{
+    display:grid;
+    grid-template-columns: 1fr 1fr 220px;
+    gap:14px;
+    align-items:end;
+    margin-bottom:14px;
+  }
+
+  .row2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:14px;
+    align-items:end;
+    margin-bottom:14px;
+  }
+
+  .field label, .result label{
+    display:block;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+
+  .help{
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: .85;
+  }
+
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.35);
+    color:#fff;
+    outline:none;
+  }
+
+  .field input:focus{
+    border-color: rgba(30,108,255,0.8);
+    box-shadow: 0 0 0 3px rgba(30,108,255,0.18);
+  }
+
+  .field input.is-invalid{
+    border-color: rgba(255,80,80,0.95);
+    box-shadow: 0 0 0 3px rgba(255,80,80,0.18);
+  }
+
+  .readonly{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border: 1px dashed rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+    color:#fff;
+  }
+
+  .kpi-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:14px;
+    margin-bottom: 14px;
+  }
+
+  .kpi{
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 14px;
+    background: rgba(0,0,0,0.18);
+  }
+
+  .kpi-label{ font-weight: 700; margin-bottom: 8px; }
+  .kpi-value{
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    padding: 6px 0;
+  }
+  .kpi-sub{ opacity: .85; font-size: 12px; margin-top: 6px; }
+
+  .hint{ opacity: .9; }
+  .wide{ grid-column: span 1; }
+
+  .actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .btn-primary, .btn-secondary{
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:12px;
+    text-decoration:none;
+  }
+  .btn-primary{ background:#1e6cff; color:#fff; border:none; cursor:pointer; }
+  .btn-secondary{ background: rgba(255,255,255,0.12); color:#fff; }
+
+  .status{
+    margin-left: 4px;
+    opacity: .9;
+    font-size: 13px;
+  }
+
+  @media (max-width: 980px){
+    .row{ grid-template-columns: 1fr; }
+    .row2{ grid-template-columns: 1fr; }
+    .kpi-grid{ grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+(function() {
+  const status = document.getElementById("status-text");
+
+  function toNumber(el) {
+    if (!el) return 0;
+    const raw = String(el.value ?? "").trim().replace(",", ".");
+    const v = parseFloat(raw);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = (Math.round(value * 10) / 10).toFixed(1);
+  }
+
+  function markValidity(el) {
+    if (!el) return;
+    const v = String(el.value ?? "").trim();
+    if (v === "") { el.classList.remove("is-invalid"); return; }
+    const n = toNumber(el);
+    if (isNaN(n) || n < 0) el.classList.add("is-invalid");
+    else el.classList.remove("is-invalid");
+  }
+
+  function recalc() {
+    const kg300NewQty = document.getElementById("id_kg300_new_qty");
+    const kg300NewFac = document.getElementById("id_kg300_new_factor");
+    const kg300ExQty  = document.getElementById("id_kg300_existing_qty");
+    const kg300ExFac  = document.getElementById("id_kg300_existing_factor");
+
+    const kg400NewQty = document.getElementById("id_kg400_new_qty");
+    const kg400NewFac = document.getElementById("id_kg400_new_factor");
+    const kg400ExQty  = document.getElementById("id_kg400_existing_qty");
+    const kg400ExFac  = document.getElementById("id_kg400_existing_factor");
+
+    const lifeEl      = document.getElementById("id_service_life_years");
+
+    [
+      kg300NewQty, kg300NewFac, kg300ExQty, kg300ExFac,
+      kg400NewQty, kg400NewFac, kg400ExQty, kg400ExFac,
+      lifeEl
+    ].forEach(markValidity);
+
+    const life = Math.max(1, toNumber(lifeEl));
+
+    const kg300_new = toNumber(kg300NewQty) * toNumber(kg300NewFac);
+    const kg300_ex  = toNumber(kg300ExQty)  * toNumber(kg300ExFac);
+    const kg400_new = toNumber(kg400NewQty) * toNumber(kg400NewFac);
+    const kg400_ex  = toNumber(kg400ExQty)  * toNumber(kg400ExFac);
+
+    const kg300_total = kg300_new + kg300_ex;
+    const kg400_total = kg400_new + kg400_ex;
+
+    const new_total = kg300_new + kg400_new;
+    const ex_total  = kg300_ex + kg400_ex;
+    const total_gwp = new_total + ex_total;
+
+    const new_per_year = new_total / life;
+    const ex_per_year  = ex_total / life;
+    const total_per_year = total_gwp / life;
+
+    setText("out-kg300-new", kg300_new);
+    setText("out-kg300-existing", kg300_ex);
+    setText("out-kg400-new", kg400_new);
+    setText("out-kg400-existing", kg400_ex);
+
+    setText("out-kg300-total", kg300_total);
+    setText("out-kg400-total", kg400_total);
+
+    setText("out-new-total", new_total);
+    setText("out-existing-total", ex_total);
+    setText("out-total-gwp", total_gwp);
+    setText("out-new-per-year", new_per_year);
+    setText("out-existing-per-year", ex_per_year);
+    setText("out-total-per-year", total_per_year);
+
+    if (status) status.textContent = "Änderungen nicht gespeichert";
+  }
+
+  function normalize(el) {
+    if (!el) return;
+    el.addEventListener("blur", () => {
+      el.value = String(el.value ?? "").replace(",", ".");
+    });
+  }
+
+  const ids = [
+    "id_kg300_new_qty", "id_kg300_new_factor",
+    "id_kg300_existing_qty", "id_kg300_existing_factor",
+    "id_kg400_new_qty", "id_kg400_new_factor",
+    "id_kg400_existing_qty", "id_kg400_existing_factor",
+    "id_service_life_years"
+  ];
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", recalc);
+    normalize(el);
+  });
+
+  recalc();
+})();
+</script>
+
 {% endblock %}

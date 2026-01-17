@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import MinValueValidator
+
 
 # ============================
 # GROUP 1: Building Data
@@ -90,107 +92,6 @@ class Building(models.Model):
     def __str__(self):
         return self.name
 
-# ============================
-# GROUP 1B: Sheet 01 – Ergebnis Energie (Overrides/Input)
-# ============================
-class Sheet01EnergyResult(models.Model):
-    """
-    Speichert NUR die editierbaren Felder aus dem Excel-Sheet
-    '01 ERGEBNIS ENERGIE' (Faktoren, Anteile, Deckungsanteile, Kopftexte).
-    Berechnete Werte werden NICHT gespeichert.
-    """
-    building = models.OneToOneField(
-        Building,
-        on_delete=models.CASCADE,
-        related_name="sheet01",
-    )
-
-    # Kopf (Excel: '04 LASTGANG'!K12/K13)
-    project = models.CharField(max_length=200, blank=True, default="")
-    location = models.CharField(max_length=200, blank=True, default="")
-
-    # Endenergie Wärme – Verlustfaktoren (Excel: 0,05 / 0,05 / 0,05 + Solar frei)
-    factor_transfer_hw = models.FloatField(default=0.05)      # Übergabe Heiz/Wasser
-    factor_distribution_hw = models.FloatField(default=0.05)  # Verteilung Heiz/Wasser
-    factor_storage_hw = models.FloatField(default=0.05)       # Speicherung Heiz/Wasser
-    factor_solar_generation = models.FloatField(default=0.0)  # "- Erzeugung Solar"
-
-    # Erzeuger-Anteile Wärme (Excel: C46/C47/C48)
-    share_wp = models.FloatField(default=1.0)
-    share_fw = models.FloatField(default=0.0)
-    share_gas = models.FloatField(default=0.0)
-
-    # Endenergie Faktoren (Excel: FW 0,4 / Gas 1,1 / Hilfsenergie 0,03)
-    factor_fw_heat = models.FloatField(default=0.4)
-    factor_gas_heat = models.FloatField(default=1.1)
-    factor_aux_heat = models.FloatField(default=0.03)
-
-    # Primärenergie Faktoren (Excel: FW 0,25 / Gas 1,1 / On-Site -1,8 / Off-Site 1,8)
-    pe_factor_fw = models.FloatField(default=0.25)
-    pe_factor_gas = models.FloatField(default=1.1)
-    pe_factor_on_site = models.FloatField(default=-1.8)
-    pe_factor_off_site = models.FloatField(default=1.8)
-
-    # Deckungsanteil PV Eigennutzung (Excel: I78 = 0,7)
-    pv_self_use_share = models.FloatField(default=0.7)
-
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Sheet01EnergyResult for {self.building.name}"
-# ============================
-# SHEET 01: Ergebnis Energie (Inputs + Kommentare)
-# ============================
-class EnergyResultSheet01(models.Model):
-    building = models.OneToOneField(
-        Building,
-        on_delete=models.CASCADE,
-        related_name="sheet01_energy",
-    )
-
-    # Kopfbereich
-    project = models.CharField(max_length=200, blank=True, default="")
-    location = models.CharField(max_length=200, blank=True, default="")
-
-    # Eingaben wie Excel (E-Spalte in deinem Sheet)
-    # Excel-Eingabe: E39
-    E39_transfer_heat_water = models.FloatField(default=0.05)
-
-    # Excel-Eingabe: E40
-    E40_distribution_heat_water = models.FloatField(default=0.05)
-
-    # Excel-Eingabe: E41
-    E41_storage_heat_water = models.FloatField(default=0.05)
-
-    # Excel-Eingabe: E42 (freie Eingabe)
-    E42_solar_generation_factor = models.FloatField(default=0.0)
-
-    # Excel-Eingabe: E47
-    E47_factor_fw = models.FloatField(default=0.4)
-
-    # Excel-Eingabe: E48
-    E48_factor_gas = models.FloatField(default=1.1)
-
-    # Excel-Eingabe: E49
-    E49_aux_heating = models.FloatField(default=0.03)
-
-    # Excel-Eingabe: E51
-    E51_air_support = models.FloatField(default=1.0)
-
-    # Excel-Eingabe: E52
-    E52_lighting = models.FloatField(default=1.0)
-
-    # Excel-Eingabe: E53
-    E53_user_process = models.FloatField(default=1.0)
-
-    # Primärenergie Deckungsanteil On-Site (I78)
-    # Excel-Eingabe: I78 (in Excel: 0,7)
-    I78_pv_self_share = models.FloatField(default=0.7)
-
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Sheet01 – {self.building.name}"
 
 # ============================
 # GROUP 2: Envelope Components
@@ -277,8 +178,6 @@ class Layer(models.Model):
 # ============================
 # GROUP 3: Internal Gains
 # ============================
-class InternalGains(models.Model):
-    dummy = models.CharField(max_length=100)
 
 # ============================
 # GROUP 4: Ventilation
@@ -358,11 +257,6 @@ class VentilationUsageShare(models.Model):
 # ============================
 # GROUP 5: Lighting & Water
 # ============================
-class Lighting(models.Model):
-    dummy = models.CharField(max_length=100)
-
-class Water(models.Model):
-    dummy = models.CharField(max_length=100)
 
 # ============================
 # GROUP 6: GWP - Herstellung
@@ -378,23 +272,82 @@ class GwpManufacturing(models.Model):
         related_name="gwp_manufacturing",
     )
 
-    # USER INPUT (getrennt nach Kostengruppe)
-    kg300_new = models.FloatField("KG300 neue Bauteile [kg]", default=0, validators=[MinValueValidator(0)])
-    kg400_new = models.FloatField("KG400 neue Bauteile [kg]", default=0, validators=[MinValueValidator(0)])
+    # USER INPUT (Excel-Logik)
+    # Menge/Volumen (z.B. m² oder m³) + spez. CO2 (kg/m² oder kg/m³)
+    kg300_new_qty = models.FloatField(
+        "KG300 neue Bauteile Menge [m²/m³]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    kg300_new_factor = models.FloatField(
+        "KG300 neue Bauteile spez. CO2 [kg/(m² oder m³)]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
 
-    kg300_existing = models.FloatField("KG300 Bestandsbauteile [kg]", default=0, validators=[MinValueValidator(0)])
-    kg400_existing = models.FloatField("KG400 Bestandsbauteile [kg]", default=0, validators=[MinValueValidator(0)])
+    kg400_new_qty = models.FloatField(
+        "KG400 neue Bauteile Menge [m²/m³]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    kg400_new_factor = models.FloatField(
+        "KG400 neue Bauteile spez. CO2 [kg/(m² oder m³)]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
 
-    service_life_years = models.FloatField("Nutzungsdauer [a]", default=50, validators=[MinValueValidator(1)])
+    kg300_existing_qty = models.FloatField(
+        "KG300 Bestandsbauteile Menge [m²/m³]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    kg300_existing_factor = models.FloatField(
+        "KG300 Bestandsbauteile spez. CO2 [kg/(m² oder m³)]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
 
-    # BERECHNET (nicht speichern)
+    kg400_existing_qty = models.FloatField(
+        "KG400 Bestandsbauteile Menge [m²/m³]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    kg400_existing_factor = models.FloatField(
+        "KG400 Bestandsbauteile spez. CO2 [kg/(m² oder m³)]",
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+
+    service_life_years = models.FloatField(
+        "Nutzungsdauer [a]",
+        default=50,
+        validators=[MinValueValidator(1)],
+    )
+
+    # BERECHNET (entspricht Excel-Spalte J etc.)
+    @property
+    def kg300_new(self):
+        return (self.kg300_new_qty or 0) * (self.kg300_new_factor or 0)
+
+    @property
+    def kg400_new(self):
+        return (self.kg400_new_qty or 0) * (self.kg400_new_factor or 0)
+
+    @property
+    def kg300_existing(self):
+        return (self.kg300_existing_qty or 0) * (self.kg300_existing_factor or 0)
+
+    @property
+    def kg400_existing(self):
+        return (self.kg400_existing_qty or 0) * (self.kg400_existing_factor or 0)
+
     @property
     def new_components_gwp(self):
-        return (self.kg300_new or 0) + (self.kg400_new or 0)
+        return self.kg300_new + self.kg400_new
 
     @property
     def existing_components_gwp(self):
-        return (self.kg300_existing or 0) + (self.kg400_existing or 0)
+        return self.kg300_existing + self.kg400_existing
 
     @property
     def total_gwp(self):
@@ -414,6 +367,7 @@ class GwpManufacturing(models.Model):
 
     def __str__(self):
         return f"GWP Herstellung ({self.building})"
+
 
 
 
@@ -626,7 +580,9 @@ def energy_balance_view(request, pk):
     return render(request, 'energy/results.html', context)
 
 
+
 # ============================
+# GROUP 8: Load Profile
 # ============================
 
 # ============================
