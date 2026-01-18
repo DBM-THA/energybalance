@@ -1,1 +1,112 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block body_class %}calculator-page{% endblock %}
+{% block title %}Licht & Wasser – Verbrauch{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-header-title">✨ Licht & Wasser ✨</h1>
+    <p class="page-header-subtitle">
+        Energie- und Wasserbedarf je Raum erfassen.
+    </p>
+    <div class="page-header-actions">
+        <a href="{% url 'building_list' %}" class="btn btn-outline-secondary btn-sm">
+            Zur Gebäudeliste
+        </a>
+    </div>
+</div>
+
+<form method="post" class="row g-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- ================= Energy ================= -->
+    <div class="col-12">
+        <fieldset>
+            <legend>☀️ Energie</legend>
+
+            <div class="mb-3">
+                {{ form.room.label_tag }}
+                {{ form.room|add_class:"form-control" }}
+                {{ form.room.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.area.label_tag }}
+                {{ form.area|add_class:"form-control" }}
+                {{ form.area.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.esoll.label_tag }}
+                {{ form.esoll|add_class:"form-control" }}
+                {{ form.esoll.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.volllast.label_tag }}
+                {{ form.volllast|add_class:"form-control" }}
+                {{ form.volllast.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.days.label_tag }}
+                {{ form.days|add_class:"form-control" }}
+                {{ form.days.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.lm.label_tag }}
+                {{ form.lm|add_class:"form-control" }}
+                {{ form.lm.errors }}
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- ================= Water ================= -->
+    <div class="col-12">
+        <fieldset>
+            <legend>💧 Wasser</legend>
+
+            <div class="mb-3">
+                {{ form.w_area.label_tag }}
+                {{ form.w_area|add_class:"form-control" }}
+                {{ form.w_area.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.persons.label_tag }}
+                {{ form.persons|add_class:"form-control" }}
+                {{ form.persons.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.dp.label_tag }}
+                {{ form.dp|add_class:"form-control" }}
+                {{ form.dp.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.da.label_tag }}
+                {{ form.da|add_class:"form-control" }}
+                {{ form.da.errors }}
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Berechnen</button>
+    </div>
+</form>
+
+{% if results %}
+<div class="mt-4">
+    <h3>Ergebnisse</h3>
+    <ul class="list-group">
+        <li class="list-group-item">
+            Gesamtleistung: {{ results.total_power }} W
+        </li>
+        <li class="list-group-item">
+            Gesamt-Energiebedarf: {{ results.total_energy }} kWh/a
+        </li>
+        <li class="list-group-item">
+            Gesamtwasserbedarf: {{ results.total_water }} kWh/a
+        </li>
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
 
