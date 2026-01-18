@@ -180,6 +180,63 @@ class Layer(models.Model):
 # ============================
 # GROUP 5: Lighting & Water
 # ============================
+# ============================
+# GROUP 5: Lighting & Water
+# ============================
+class Energy(models.Model):
+    building = models.ForeignKey(
+        'Building', on_delete=models.CASCADE, related_name='energies'
+    )
+    room = models.CharField(max_length=100)
+    area = models.FloatField("Fläche [m²]")
+    esoll = models.FloatField("E_soll [lx]")
+    volllast = models.FloatField("Vollast [h/Tag]")
+    days = models.FloatField("Nutzungstage [d/a]")
+    lm = models.FloatField("Lichtausbeute [lm/W]")
+
+    # Automatisch berechnete Felder
+    power = models.FloatField("Leistung [W]", null=True, blank=True)
+    hours = models.FloatField("Betriebsstunden [h/a]", null=True, blank=True)
+    energy_consumption = models.FloatField("Energiebedarf [kWh/a]", null=True, blank=True)
+
+    def calculate(self):
+        if self.lm and self.lm != 0:
+            self.power = (self.area * self.esoll) / self.lm
+        else:
+            self.power = 0
+        self.hours = self.volllast * self.days
+        self.energy_consumption = self.power * self.hours / 1000
+        self.save()
+        return self.power, self.hours, self.energy_consumption
+
+    def __str__(self):
+        return f"{self.room} ({self.building.name})"
+
+
+class Water(models.Model):
+    building = models.ForeignKey(
+        'Building', on_delete=models.CASCADE, related_name='waters'
+    )
+    room = models.CharField(max_length=100)
+    area = models.FloatField("Fläche [m²]")
+    persons = models.FloatField("Personen")
+    dp = models.FloatField("Bedarf kWh/Pers·d")
+    da = models.FloatField("Bedarf Wh/m²·d")
+
+    # Berechnete Felder
+    ep = models.FloatField("Personenbedarf [kWh/a]", null=True, blank=True)
+    ea = models.FloatField("Flächenbedarf [kWh/a]", null=True, blank=True)
+    em = models.FloatField("Mittelwert [kWh/a]", null=True, blank=True)
+
+    def calculate(self):
+        self.ep = self.dp * self.persons * 365
+        self.ea = self.area * self.da * 365 / 1000
+        self.em = (self.ep + self.ea) / 2
+        self.save()
+        return self.ep, self.ea, self.em
+
+    def __str__(self):
+        return f"{self.room} ({self.building.name})"
 
 # ============================
 # GROUP 6: PV
