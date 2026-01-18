@@ -1,5 +1,5 @@
 # berechnungen.py
-from .models import Energy, Water, Building
+from energyapp.models import Energy, Water, Building
 
 def calc_energy(building: Building) -> dict:
     """
