@@ -23,6 +23,8 @@ urlpatterns = [
     path("buildings/<int:pk>/summer/step1/", summer_steps_views.summer_step1, name="summer_step1"),
     path("buildings/<int:pk>/summer/step2/", summer_steps_views.summer_step2, name="summer_step2"),
     path("summer/fc-info/", summer_views.fc_info, name="fc_info"),
+    path("summer/step1/", summer_steps_views.summer_step1, name="summer_step1"),
+    path("summer/step2/", summer_steps_views.summer_step2, name="summer_step2"),
     path("summary-dashboard/", building_view.summary_dashboard, name="summary_dashboard"),
     path("internal-gains/", building_view.internal_gains, name="internal_gains"),
     path(
