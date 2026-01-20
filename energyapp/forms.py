@@ -54,12 +54,19 @@ class BuildingForm(forms.ModelForm):
             "pv_self_consumption_share",
         ]
 
+from django import forms
+from .models import SummerProtection
+
+
 class SummerProtectionForm(forms.ModelForm):
+    """
+    Full Summer Protection form (Step 2-style).
+    Building is NOT editable here – it is selected via URL (building pk).
+    """
     class Meta:
         model = SummerProtection
         fields = [
             "name",
-            "building",
             "orientation",
             "ngf_m2",
             "window_area_m2",
@@ -70,13 +77,15 @@ class SummerProtectionForm(forms.ModelForm):
             "passive_cooling",
         ]
 
-from .models import SummerProtection
 
 class SummerStep1Form(forms.ModelForm):
+    """
+    Step 1 form: only the inputs needed to check the 10% threshold.
+    Building is NOT editable here – it is selected via URL (building pk).
+    """
     class Meta:
         model = SummerProtection
         fields = [
-            "building",
             "orientation",
             "ngf_m2",
             "window_area_m2",
@@ -84,10 +93,13 @@ class SummerStep1Form(forms.ModelForm):
 
 
 class SummerStep2Form(forms.ModelForm):
+    """
+    Step 2 form: full proof inputs.
+    Building is NOT editable here – it is selected via URL (building pk).
+    """
     class Meta:
         model = SummerProtection
         fields = [
-            "building",
             "orientation",
             "ngf_m2",
             "window_area_m2",
