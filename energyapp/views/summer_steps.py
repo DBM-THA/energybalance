@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
 from ..models import SummerProtection, Building
@@ -8,29 +8,23 @@ from ..logic.summer import calc_summer_overheating
 WINDOW_SHARE_THRESHOLD = 0.10  # 10%
 
 
-def _get_or_create_default_instance():
-    building = Building.objects.first()
-    if building is None:
-        return None, None
+def _get_or_create_instance_for_building(pk: int):
+    building = get_object_or_404(Building, pk=pk)
 
+    # exactly one SummerProtection per Building
     instance, _ = SummerProtection.objects.get_or_create(
-        id=1,
-        defaults={"name": "Default summer scenario", "building": building},
+        building=building,
+        defaults={"name": "Sommerlicher Wärmeschutz"},
     )
-
-    if instance.building_id is None:
-        instance.building = building
-        instance.save()
 
     return instance, building
 
 
-def summer_step1(request):
-    instance, building = _get_or_create_default_instance()
-    if instance is None:
-        return render(request, "energyapp/summer_step1.html", {"form": None, "result": None})
+def summer_step1(request, pk):
+    instance, building = _get_or_create_instance_for_building(pk)
 
-    result = request.session.get("summer_step1_result")
+    session_key = f"summer_step1_result_{building.pk}"
+    result = request.session.get(session_key)
 
     if request.method == "POST":
         form = SummerStep1Form(request.POST, instance=instance)
@@ -53,36 +47,44 @@ def summer_step1(request):
                 "threshold_pct": round(threshold_pct, 1),
                 "needs_proof": needs_proof,
             }
-            request.session["summer_step1_result"] = result
+            request.session[session_key] = result
 
             if needs_proof:
-                return redirect(reverse("summer_step2"))
-            return redirect(reverse("summer_step1"))
+                return redirect(reverse("summer_step2", kwargs={"pk": building.pk}))
+            return redirect(reverse("summer_step1", kwargs={"pk": building.pk}))
     else:
         form = SummerStep1Form(instance=instance)
 
-    return render(request, "energyapp/summer_step1.html", {"form": form, "result": result})
+    return render(
+        request,
+        "energyapp/summer_step1.html",
+        {"form": form, "result": result, "building": building},
+    )
 
 
-def summer_step2(request):
-    instance, building = _get_or_create_default_instance()
-    if instance is None:
-        return render(request, "energyapp/summer_step2.html", {"form": None, "result": None, "step1": None})
+def summer_step2(request, pk):
+    instance, building = _get_or_create_instance_for_building(pk)
 
-    step1 = request.session.get("summer_step1_result")
+    step1_key = f"summer_step1_result_{building.pk}"
+    step1 = request.session.get(step1_key)
     if not step1:
-        return redirect(reverse("summer_step1"))
+        return redirect(reverse("summer_step1", kwargs={"pk": building.pk}))
 
-    result = request.session.get("summer_step2_result")
+    result_key = f"summer_step2_result_{building.pk}"
+    result = request.session.get(result_key)
 
     if request.method == "POST":
         form = SummerStep2Form(request.POST, instance=instance)
         if form.is_valid():
             sp = form.save()
             result = calc_summer_overheating(sp)
-            request.session["summer_step2_result"] = result
-            return redirect(reverse("summer_step2"))
+            request.session[result_key] = result
+            return redirect(reverse("summer_step2", kwargs={"pk": building.pk}))
     else:
         form = SummerStep2Form(instance=instance)
 
-    return render(request, "energyapp/summer_step2.html", {"form": form, "result": result, "step1": step1})
+    return render(
+        request,
+        "energyapp/summer_step2.html",
+        {"form": form, "result": result, "step1": step1, "building": building},
+    )
