@@ -23,6 +23,12 @@
   <div class="summer-header">
     <h1 style="margin:0; font-size:1.6rem;">Sommerlicher Wärmeschutz – Schritt 1</h1>
     <p style="margin:.3rem 0 0 0; color:#666;">Prüfen, ob ein Nachweis erforderlich ist (Grenzwert: 10%)</p>
+
+    {% if building %}
+      <p style="margin:.35rem 0 0 0; color:#444;">
+        Gebäude: <b>{{ building.name }}</b>
+      </p>
+    {% endif %}
   </div>
 
   {% if form %}
@@ -34,11 +40,7 @@
         <div class="summer-card">
           <h2 style="margin:0 0 .7rem 0;">Eingaben (kritischer Raum)</h2>
 
-          <div class="summer-field">
-            {{ form.building.label_tag }}
-            {{ form.building }}
-          </div>
-
+          <!-- Building wird über Gebäudeliste gewählt -> nicht als Dropdown anzeigen -->
           <div class="summer-field">
             {{ form.orientation.label_tag }}
             {{ form.orientation }}
@@ -71,7 +73,7 @@
             {% if result.needs_proof %}
               <span class="badge bad">Nachweis erforderlich → Schritt 2</span>
               <p style="margin-top:.8rem;">
-                <a href="{% url 'summer_step2' %}">→ Weiter zu Schritt 2</a>
+                <a href="{% url 'summer_step2' building.pk %}">→ Weiter zu Schritt 2</a>
               </p>
             {% else %}
               <span class="badge ok">Kein Nachweis erforderlich</span>
