@@ -94,6 +94,20 @@
                         PV Überschuss<br><small>[kWh/a]</small>
                     </th>
 
+                    <td class="text-center">
+  <a class="btn btn-outline-warning btn-sm"
+     href="{% url 'summer' b.pk %}">
+    Wärmeschutz
+  </a>
+
+  {% if b.summer_protections.all %}
+    <span class="badge bg-success ms-1">saved</span>
+  {% else %}
+    <span class="badge bg-secondary ms-1">not set</span>
+  {% endif %}
+</td>
+
+
                     <th style="width: 180px;" class="text-center">
                         Aktionen
                     </th>
