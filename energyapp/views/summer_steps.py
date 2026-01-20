@@ -8,23 +8,19 @@ from ..logic.summer import calc_summer_overheating
 WINDOW_SHARE_THRESHOLD = 0.10  # 10%
 
 
-def _get_or_create_instance_for_building(pk: int):
-    building = get_object_or_404(Building, pk=pk)
-
-    # exactly one SummerProtection per Building
+def _get_or_create_instance_for_building(building: Building):
     instance, _ = SummerProtection.objects.get_or_create(
         building=building,
-        defaults={"name": "Sommerlicher Wärmeschutz"},
+        defaults={"name": "Default summer scenario"},
     )
-
-    return instance, building
+    return instance
 
 
 def summer_step1(request, pk):
-    instance, building = _get_or_create_instance_for_building(pk)
+    building = get_object_or_404(Building, pk=pk)
+    instance = _get_or_create_instance_for_building(building)
 
-    session_key = f"summer_step1_result_{building.pk}"
-    result = request.session.get(session_key)
+    result = request.session.get(f"summer_step1_result_{pk}")
 
     if request.method == "POST":
         form = SummerStep1Form(request.POST, instance=instance)
@@ -47,11 +43,11 @@ def summer_step1(request, pk):
                 "threshold_pct": round(threshold_pct, 1),
                 "needs_proof": needs_proof,
             }
-            request.session[session_key] = result
+            request.session[f"summer_step1_result_{pk}"] = result
 
             if needs_proof:
-                return redirect(reverse("summer_step2", kwargs={"pk": building.pk}))
-            return redirect(reverse("summer_step1", kwargs={"pk": building.pk}))
+                return redirect(reverse("summer_step2", kwargs={"pk": pk}))
+            return redirect(reverse("summer_step1", kwargs={"pk": pk}))
     else:
         form = SummerStep1Form(instance=instance)
 
@@ -63,23 +59,22 @@ def summer_step1(request, pk):
 
 
 def summer_step2(request, pk):
-    instance, building = _get_or_create_instance_for_building(pk)
+    building = get_object_or_404(Building, pk=pk)
+    instance = _get_or_create_instance_for_building(building)
 
-    step1_key = f"summer_step1_result_{building.pk}"
-    step1 = request.session.get(step1_key)
+    step1 = request.session.get(f"summer_step1_result_{pk}")
     if not step1:
-        return redirect(reverse("summer_step1", kwargs={"pk": building.pk}))
+        return redirect(reverse("summer_step1", kwargs={"pk": pk}))
 
-    result_key = f"summer_step2_result_{building.pk}"
-    result = request.session.get(result_key)
+    result = request.session.get(f"summer_step2_result_{pk}")
 
     if request.method == "POST":
         form = SummerStep2Form(request.POST, instance=instance)
         if form.is_valid():
             sp = form.save()
             result = calc_summer_overheating(sp)
-            request.session[result_key] = result
-            return redirect(reverse("summer_step2", kwargs={"pk": building.pk}))
+            request.session[f"summer_step2_result_{pk}"] = result
+            return redirect(reverse("summer_step2", kwargs={"pk": pk}))
     else:
         form = SummerStep2Form(instance=instance)
 
