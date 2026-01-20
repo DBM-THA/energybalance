@@ -51,16 +51,27 @@ class ExternalSources:
 def build_external_sources(building: Building) -> ExternalSources:
     """
     Minimal sinnvolle Zuordnung zu deinem aktuellen Datenmodell:
-    - Heizwärmebedarf: building.result_Q_h (kommt aus deiner calc_heating_demand)
+    - Heizwärmebedarf: building.result_Q_h
     - PV: building.result_Q_PV_total
-    Alles andere ist aktuell nicht im Modell: bleibt 0.
+    - NGF: building.ngf_t
+    - Lüftung: building.ventilation.result_energy_kwh (falls vorhanden)
+    Alles andere bleibt 0, bis entsprechende Module existieren.
     """
 
     # Excel: NGF_t (Name Manager) -> bei uns: building.ngf_t
     ngf = _num(getattr(building, "ngf_t", None))
+
+    # Fallback nur, wenn Altbestand existiert UND du es bewusst zulassen willst.
+    # Wenn du streng bleiben willst: lass es 0, damit der Fehler sichtbar ist.
     if ngf <= 0:
-        # Fallback für Altbestand ohne ngf_t
-        ngf = _num(building.result_floor_area)
+        ngf = 0.0
+
+
+    # Lüftung aus VentilationScenario (falls schon berechnet/gespeichert)
+    ventilation_kwh_a = 0.0
+    ventilation_obj = getattr(building, "ventilation", None)  # related_name="ventilation"
+    if ventilation_obj:
+        ventilation_kwh_a = _num(getattr(ventilation_obj, "result_energy_kwh", None))
 
     return ExternalSources(
         # Excel-Quelle: ='03 MONATSBILANZ'!O76
@@ -72,9 +83,11 @@ def build_external_sources(building: Building) -> ExternalSources:
         # Excel-Quelle: NGF_t (Name Manager) -> ='00 GEBÄUDEDATEN'!F40
         ngf_m2=ngf,
 
+        # Excel-Quelle: ='11 LUFTFÖRDERUNG'!E97  (bei uns: VentilationScenario.result_energy_kwh)
+        ventilation_kwh_a=ventilation_kwh_a,
+
         # noch nicht abgebildet -> 0
         dhw_kwh_a=0.0,
-        ventilation_kwh_a=0.0,
         lighting_kwh_a=0.0,
         user_process_kwh_a=0.0,
 
@@ -83,12 +96,27 @@ def build_external_sources(building: Building) -> ExternalSources:
     )
 
 
+
 def calculate_sheet01(building: Building, sheet: EnergyResultSheet01) -> Dict[str, Any]:
     """
     Gibt ein Dict zurück, das du 1:1 als `calc.*` im Template nutzt.
     Benennung orientiert sich an deinen Excel-Zellen (F22, G22, ...).
     """
     ext = build_external_sources(building)
+    # FIXE EXCEL-FAKTOREN
+    E39 = 0.05
+    E40 = 0.05
+    E41 = 0.05
+    E47 = 0.40
+    E48 = 1.10
+    E49 = 0.03
+    E51 = 1.0
+    E52 = 1.0
+    E53 = 1.0
+    I78 = 0.70
+
+    # EINZIGE EINGABE
+    E42 = _num(sheet.E42_solar_generation_factor)
 
     NGF_t = _num(ext.ngf_m2)
 
@@ -156,22 +184,22 @@ def calculate_sheet01(building: Building, sheet: EnergyResultSheet01) -> Dict[st
 
     # Übergabe Heiz/Wasser
     # Excel-Formel: =F22*$E39
-    F39 = F22 * _num(sheet.E39_transfer_heat_water)
+    F39 = F22 * E39
     G39 = _safe_div(F39, NGF_t)
 
     # Verteilung Heiz/Wasser
     # Excel-Formel: =E40*(F22+F39)
-    F40 = _num(sheet.E40_distribution_heat_water) * (F22 + F39)
+    F40 = E40 * (F22 + F39)
     G40 = _safe_div(F40, NGF_t)
 
     # Speicherung Heiz/Wasser
     # Excel-Formel: =E41*(F22+F39+F40)
-    F41 = _num(sheet.E41_storage_heat_water) * (F22 + F39 + F40)
+    F41 = E41 * (F22 + F39 + F40)
     G41 = _safe_div(F41, NGF_t)
 
     # - Erzeugung Solar
     # Excel-Formel: =-F22*$E42
-    F42 = -F22 * _num(sheet.E42_solar_generation_factor)
+    F42 = -F22 * E42
     G42 = _safe_div(F42, NGF_t)
 
     # Erzeugernutzwärmeabgabe
@@ -197,20 +225,18 @@ def calculate_sheet01(building: Building, sheet: EnergyResultSheet01) -> Dict[st
     # Fernwärme
     # C47 =IF('00 GEBÄUDEDATEN'!F136="Fernwärme";1;0)
     C47 = 0.0
-    E47 = _num(sheet.E47_factor_fw)
     F47 = F43 * E47 * C47
     G47 = _safe_div(F47, NGF_t)
 
     # Gas
     # C48 =IF('00 GEBÄUDEDATEN'!F136="Gasheizung";1;0)
     C48 = 0.0
-    E48 = _num(sheet.E48_factor_gas)
     F48 = F43 * E48 * C48
     G48 = _safe_div(F48, NGF_t)
 
     # Hilfsenergie Heizung
     # Excel-Formel: =$F$43*$E49
-    F49 = F43 * _num(sheet.E49_aux_heating)
+    F49 = F43 * E49
     G49 = _safe_div(F49, NGF_t)
 
     # Trinkwarmwasser
@@ -220,17 +246,17 @@ def calculate_sheet01(building: Building, sheet: EnergyResultSheet01) -> Dict[st
 
     # Luftförderung
     # Excel-Formel: =F25*$E51
-    F51 = F25 * _num(sheet.E51_air_support)
+    F51 = F25 * E51
     G51 = _safe_div(F51, NGF_t)
 
     # Beleuchtung
     # Excel-Formel: =F27*$E52
-    F52 = F27 * _num(sheet.E52_lighting)
+    F52 = F27 * E52
     G52 = _safe_div(F52, NGF_t)
 
     # Nutzer (Prozess)
     # Excel-Formel: =F29*$E53
-    F53 = F29 * _num(sheet.E53_user_process)
+    F53 = F29 * E53
     G53 = _safe_div(F53, NGF_t)
 
     # Endenergiebedarf
@@ -297,7 +323,7 @@ def calculate_sheet01(building: Building, sheet: EnergyResultSheet01) -> Dict[st
     F68_like = F67
 
     pv_total = _num(ext.pv_total_kwh_a)  # '05 PHOTOVOLTAIK'!Q111
-    I78 = _num(sheet.I78_pv_self_share)  # Deckungsanteil
+    I78 = 0.70  # Deckungsanteil
     E78 = -1.8
 
     # Excel-Formel:
@@ -322,6 +348,21 @@ def calculate_sheet01(building: Building, sheet: EnergyResultSheet01) -> Dict[st
     # Hinweis: F78/E78 gibt den kWh/a-Anteil zurück (weil E78=-1,8), passt als Rückrechnung.
     F87 = pv_total - _safe_div(F78, E78) if E78 != 0 else pv_total
     G87 = _safe_div(F87, NGF_t)
+
+    # =========================
+    # GWP (Zusatzblock für Summary-Übersicht)
+    # =========================
+    m = getattr(building, "gwp_manufacturing", None)
+    c = getattr(building, "gwp_compensation", None)
+
+    gwp_manufacturing_total = _num(getattr(m, "total_gwp", 0)) if m else 0.0
+    gwp_manufacturing_new_py = _num(getattr(m, "new_per_year", 0)) if m else 0.0
+    gwp_manufacturing_existing_py = _num(getattr(m, "existing_per_year", 0)) if m else 0.0
+
+    gwp_operation_py = _num(getattr(c, "operation_total_per_year", 0)) if c else 0.0
+    gwp_sum_without_existing_py = _num(getattr(c, "sum_without_existing", 0)) if c else 0.0
+    gwp_sum_with_existing_py = _num(getattr(c, "sum_with_existing", 0)) if c else 0.0
+
 
     return {
         # Nutzenergie
@@ -376,4 +417,14 @@ def calculate_sheet01(building: Building, sheet: EnergyResultSheet01) -> Dict[st
 
         # Überschuss
         "F87": round(F87, 3), "G87": round(G87, 3),
+
+        # GWP Summary
+        "gwp_manufacturing_total": round(gwp_manufacturing_total, 3),
+        "gwp_manufacturing_new_per_year": round(gwp_manufacturing_new_py, 3),
+        "gwp_manufacturing_existing_per_year": round(gwp_manufacturing_existing_py, 3),
+
+        "gwp_operation_per_year": round(gwp_operation_py, 3),
+        "gwp_sum_without_existing_per_year": round(gwp_sum_without_existing_py, 3),
+        "gwp_sum_with_existing_per_year": round(gwp_sum_with_existing_py, 3),
+
     }

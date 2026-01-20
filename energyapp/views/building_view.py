@@ -3,7 +3,7 @@ from io import BytesIO
 
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from energyapp.forms import BuildingForm,SimpleBuildingForm
+from energyapp.forms import BuildingForm,SimpleBuildingForm, EnergyResultSheet01Form
 from energyapp.logic.building import calc_heating_demand
 from energyapp.models import Building
 
@@ -16,6 +16,9 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
+from energyapp.models import EnergyResultSheet01
+from energyapp.logic.result_sheet_01 import calculate_sheet01
+
 
 
 
@@ -572,26 +575,37 @@ def summary_dashboard(request):
     else:
         building = Building.objects.order_by("-id").first()
 
+    if not building:
+        return render(
+            request,
+            "energyapp/summary_dashboard.html",
+            {"building": None, "sheet": None, "calc": {}, "form": None},
+        )
 
-    energy_input = None
-    energy_results = None
+    # Pro Building genau ein Sheet01-Objekt
+    sheet, _ = EnergyResultSheet01.objects.get_or_create(building=building)
 
-    if building and hasattr(building, "energy_input"):
-        energy_input = building.energy_input
+    if request.method == "POST":
+        form = EnergyResultSheet01Form(request.POST, instance=sheet)
+        if form.is_valid():
+            sheet = form.save()
+            return redirect(f"{request.path}?building={building.pk}")
+    else:
+        form = EnergyResultSheet01Form(instance=sheet)
 
-        # Berechnung einfügen (wenn vorhanden)
-        from energyapp.logic.energy_calculator import calculate_energy_results
-        energy_results = calculate_energy_results(energy_input)
+    calc = calculate_sheet01(building, sheet)
 
     return render(
         request,
         "energyapp/summary_dashboard.html",
         {
-            "energy_input": energy_input,
-            "energy_results": energy_results,
             "building": building,
+            "sheet": sheet,
+            "calc": calc,
+            "form": form,
         },
     )
+
 
 def pv_details(request):
     return render(request, "energyapp/pv_details.html")
