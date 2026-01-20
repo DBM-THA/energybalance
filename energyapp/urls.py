@@ -6,6 +6,7 @@ from energyapp.views.gwp_manufacturing_view import gwp_manufacturing_edit
 from energyapp.views.gwp_overview import gwp_overview
 from energyapp.views.gwp_compensation_view import gwp_compensation_edit
 from .views.load_profile import energy_balance_view
+from energyapp.views import ventilation
 urlpatterns = [
     path("", building_view.dashboard, name="dashboard"),
     path("calculator/", building_view.building_create_detailed, name="building_create"),
@@ -46,4 +47,18 @@ urlpatterns = [
 
     path("pv-details/", building_view.pv_details, name="pv_details"),
     path("ventilation/", building_view.ventilation, name="ventilation"),
+    
+
+    path(
+        "ventilation/",
+        ventilation.select_building_for_ventilation,
+        name="ventilation-select-building",
+    ),
+    path(
+        "ventilation/<int:building_id>/",
+        ventilation.ventilation_view,
+        name="ventilation-detail",
+    ),
+
+
 ]
