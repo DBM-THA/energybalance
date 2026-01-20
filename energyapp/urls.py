@@ -46,19 +46,21 @@ urlpatterns = [
     path('building/<int:pk>/bilanz/', energy_balance_view, name='energy_balance'),
 
     path("pv-details/", building_view.pv_details, name="pv_details"),
-    path("ventilation/", building_view.ventilation, name="ventilation"),
     
 
-    path(
-        "ventilation/",
-        ventilation.select_building_for_ventilation,
-        name="ventilation-select-building",
-    ),
-    path(
-        "ventilation/<int:building_id>/",
-        ventilation.ventilation_view,
-        name="ventilation-detail",
-    ),
+# Ventilation
+path(
+    "ventilation/",
+    ventilation.select_building_for_ventilation,
+    name="ventilation-select",
+),
+path(
+    "ventilation/<int:building_id>/",
+    ventilation.ventilation_view,
+    name="ventilation-detail",
+),
+
+
 
 
 ]
