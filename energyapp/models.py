@@ -691,3 +691,39 @@ class SummerProtection(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.orientation}) – {self.building.name}"
+
+# ============================
+# Ergebnisblatt 01 – Ergebnis Energie (Excel: 01 ERGEBNIS ENERGIE)
+# ============================
+class EnergyResultSheet01(models.Model):
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="sheet01",
+    )
+
+    # Kopf (Excel-Quelle: '04 LASTGANG'!K12 / K13)
+    project = models.CharField(max_length=200, blank=True, default="")
+    location = models.CharField(max_length=200, blank=True, default="")
+
+    # Endenergie Wärme – Faktoren (Excel: E39..E42)
+    E39_transfer_heat_water = models.FloatField(default=0.05)
+    E40_distribution_heat_water = models.FloatField(default=0.05)
+    E41_storage_heat_water = models.FloatField(default=0.05)
+    E42_solar_generation_factor = models.FloatField(default=0.0)
+
+    # Endenergie – Faktoren (Excel: E47..E53)
+    E47_factor_fw = models.FloatField(default=0.0)
+    E48_factor_gas = models.FloatField(default=0.0)
+    E49_aux_heating = models.FloatField(default=0.03)
+    E51_air_support = models.FloatField(default=1.0)
+    E52_lighting = models.FloatField(default=1.0)
+    E53_user_process = models.FloatField(default=1.0)
+
+    # Primärenergie – PV Deckungsanteil (Excel: I78)
+    I78_pv_self_share = models.FloatField(default=0.0)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"EnergyResultSheet01 – {self.building.name}"

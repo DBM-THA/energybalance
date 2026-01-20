@@ -223,6 +223,14 @@
     {% csrf_token %}
 
     <table class="xl-meta">
+      <!-- NEU: Name aus Building -->
+      <tr>
+        <td class="label">Name</td>
+        <td class="value" style="text-align:left;">
+          {{ building.name }}
+        </td>
+      </tr>
+
       <tr>
         <td class="label">Projekt</td>
         <td class="value">
@@ -255,11 +263,9 @@
         <td>Heizwärme</td>
         <td>Monatsbilanz</td>
         <td class="num refcell">
-          <!-- Excel-Quelle: ='03 MONATSBILANZ'!O76 -> Mapping: building.result_Q_h -->
           {{ calc.F22|de_number:0 }}
         </td>
         <td class="num refcell">
-          <!-- Excel-Quelle: ='03 MONATSBILANZ'!O77 (spezifisch) -> hier: F22/NGF_t -->
           {{ calc.G22|de_number:2 }}
         </td>
         <td class="refcell"></td>
@@ -278,14 +284,8 @@
       <tr>
         <td>Trinkwarmwasser</td>
         <td>Licht + Wasser</td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: ='12 LICHT UND WASSER'!L56 -> aktuell nicht im Modell, default 0 -->
-          {{ calc.F24|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: ='12 LICHT UND WASSER'!L56/'04 LASTGANG'!E21 -> hier: / NGF_t -->
-          {{ calc.G24|de_number:2 }}
-        </td>
+        <td class="num refcell">{{ calc.F24|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G24|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"><i>Standardwert 4108-6 Wohnbau: 12,5 kWh/m²a</i></td>
       </tr>
@@ -293,14 +293,8 @@
       <tr>
         <td>Luftförderung</td>
         <td>Luftförderung</td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: ='11 LUFTFÖRDERUNG'!E97 -> aktuell nicht im Modell, default 0 -->
-          {{ calc.F25|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: ='11 LUFTFÖRDERUNG'!E97/'04 LASTGANG'!E21 -> / NGF_t -->
-          {{ calc.G25|de_number:2 }}
-        </td>
+        <td class="num refcell">{{ calc.F25|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G25|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"></td>
       </tr>
@@ -317,14 +311,8 @@
       <tr>
         <td>Beleuchtung</td>
         <td>Licht + Wasser</td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: ='12 LICHT UND WASSER'!L36 -> aktuell nicht im Modell, default 0 -->
-          {{ calc.F27|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: ='12 LICHT UND WASSER'!L36/'04 LASTGANG'!E21 -> / NGF_t -->
-          {{ calc.G27|de_number:2 }}
-        </td>
+        <td class="num refcell">{{ calc.F27|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G27|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"></td>
       </tr>
@@ -341,28 +329,16 @@
       <tr>
         <td>Nutzer (Prozess)</td>
         <td>n. v.</td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: ='10 INNERE WÄRMEQUELLEN'!N49 -> aktuell nicht im Modell, default 0 -->
-          {{ calc.F29|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: ='10 INNERE WÄRMEQUELLEN'!O49 -> hier: / NGF_t -->
-          {{ calc.G29|de_number:2 }}
-        </td>
+        <td class="num refcell">{{ calc.F29|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G29|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"></td>
       </tr>
 
       <tr class="xl-sumrow">
         <td class="sumlabel" colspan="2">Nutzenergiebedarf</td>
-        <td class="num">
-          <!-- Excel-Formel: =SUM(F22:F29) -->
-          {{ calc.F30|de_number:0 }}
-        </td>
-        <td class="num">
-          <!-- Excel-Formel: =SUM(G22:G29) -->
-          {{ calc.G30|de_number:2 }}
-        </td>
+        <td class="num">{{ calc.F30|de_number:0 }}</td>
+        <td class="num">{{ calc.G30|de_number:2 }}</td>
         <td colspan="2"></td>
       </tr>
 
@@ -398,68 +374,36 @@
       <tr>
         <td>Heizwärme s.o</td>
         <td class="num refcell">1,00</td>
-        <td class="num refcell">
-          <!-- Excel: =E38*(F22) -->
-          {{ calc.F38|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =F38/NGF_t -->
-          {{ calc.G38|de_number:2 }}
-        </td>
+        <td class="num refcell">{{ calc.F38|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G38|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"><i>s.o.</i></td>
       </tr>
 
+      <!-- FIX: Faktoren als feste Werte wie Excel -->
       <tr>
         <td>Übergabe Heiz / Wasser</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E39 -->
-          <input class="xl-input" type="number" step="0.0001" name="E39_transfer_heat_water" value="{{ sheet.E39_transfer_heat_water }}">
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =F22*$E39 -->
-          {{ calc.F39|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =F39/NGF_t -->
-          {{ calc.G39|de_number:2 }}
-        </td>
+        <td class="num refcell">0,05</td>
+        <td class="num refcell">{{ calc.F39|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G39|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"><i>5% pauschal, detailliert DIN V 18599-5:2018</i></td>
       </tr>
 
       <tr>
         <td>Verteilung Heiz / Wasser</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E40 -->
-          <input class="xl-input" type="number" step="0.0001" name="E40_distribution_heat_water" value="{{ sheet.E40_distribution_heat_water }}">
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =E40*(F22+F39) -->
-          {{ calc.F40|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =F40/NGF_t -->
-          {{ calc.G40|de_number:2 }}
-        </td>
+        <td class="num refcell">0,05</td>
+        <td class="num refcell">{{ calc.F40|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G40|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"><i>5% pauschal, detailliert DIN V 18599-5:2019</i></td>
       </tr>
 
       <tr>
         <td>Speicherung Heiz / Wasser</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E41 -->
-          <input class="xl-input" type="number" step="0.0001" name="E41_storage_heat_water" value="{{ sheet.E41_storage_heat_water }}">
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =E41*(F22+F39+F40) -->
-          {{ calc.F41|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =F41/NGF_t -->
-          {{ calc.G41|de_number:2 }}
-        </td>
+        <td class="num refcell">0,05</td>
+        <td class="num refcell">{{ calc.F41|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G41|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"><i>5% pauschal, detailliert DIN V 18599-5:2020</i></td>
       </tr>
@@ -467,17 +411,11 @@
       <tr>
         <td>- Erzeugung Solar</td>
         <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E42 (Freie Eingabe) -->
+          <!-- EINZIGE freie Eingabe -->
           <input class="xl-input" type="number" step="0.0001" name="E42_solar_generation_factor" value="{{ sheet.E42_solar_generation_factor }}">
         </td>
-        <td class="num refcell">
-          <!-- Excel: =-F22*$E42 -->
-          {{ calc.F42|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =F42/NGF_t -->
-          {{ calc.G42|de_number:2 }}
-        </td>
+        <td class="num refcell">{{ calc.F42|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G42|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"><i>Freie Eingabe</i></td>
       </tr>
@@ -485,14 +423,8 @@
       <tr>
         <td><b>Erzeugernutzwärmeabgabe</b></td>
         <td class="refcell"></td>
-        <td class="num refcell">
-          <!-- Excel: =SUM(F38:F42) -->
-          {{ calc.F43|de_number:0 }}
-        </td>
-        <td class="num refcell">
-          <!-- Excel: =SUM(G38:G42) -->
-          {{ calc.G43|de_number:2 }}
-        </td>
+        <td class="num refcell">{{ calc.F43|de_number:0 }}</td>
+        <td class="num refcell">{{ calc.G43|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="refcell"></td>
       </tr>
@@ -517,10 +449,7 @@
 
       <tr>
         <td>Wärmeerzeuger FW</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E47 -->
-          <input class="xl-input" type="number" step="0.0001" name="E47_factor_fw" value="{{ sheet.E47_factor_fw }}">
-        </td>
+        <td class="num refcell">0,40</td>
         <td class="num refcell">{{ calc.F47|de_number:0 }}</td>
         <td class="num refcell">{{ calc.G47|de_number:2 }}</td>
         <td class="refcell"></td>
@@ -529,10 +458,7 @@
 
       <tr>
         <td>Wärmeerzeuger Gas</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E48 -->
-          <input class="xl-input" type="number" step="0.0001" name="E48_factor_gas" value="{{ sheet.E48_factor_gas }}">
-        </td>
+        <td class="num refcell">1,10</td>
         <td class="num refcell">{{ calc.F48|de_number:0 }}</td>
         <td class="num refcell">{{ calc.G48|de_number:2 }}</td>
         <td class="refcell"></td>
@@ -541,10 +467,7 @@
 
       <tr>
         <td>Hilfsenergie Heizung</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E49 -->
-          <input class="xl-input" type="number" step="0.0001" name="E49_aux_heating" value="{{ sheet.E49_aux_heating }}">
-        </td>
+        <td class="num refcell">0,03</td>
         <td class="num refcell">{{ calc.F49|de_number:0 }}</td>
         <td class="num refcell">{{ calc.G49|de_number:2 }}</td>
         <td class="refcell"></td>
@@ -562,10 +485,7 @@
 
       <tr>
         <td>Luftförderung</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E51 -->
-          <input class="xl-input" type="number" step="0.0001" name="E51_air_support" value="{{ sheet.E51_air_support }}">
-        </td>
+        <td class="num refcell">1,00</td>
         <td class="num refcell">{{ calc.F51|de_number:0 }}</td>
         <td class="num refcell">{{ calc.G51|de_number:2 }}</td>
         <td class="refcell"></td>
@@ -574,10 +494,7 @@
 
       <tr>
         <td>Beleuchtung</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E52 -->
-          <input class="xl-input" type="number" step="0.0001" name="E52_lighting" value="{{ sheet.E52_lighting }}">
-        </td>
+        <td class="num refcell">1,00</td>
         <td class="num refcell">{{ calc.F52|de_number:0 }}</td>
         <td class="num refcell">{{ calc.G52|de_number:2 }}</td>
         <td class="refcell"></td>
@@ -586,10 +503,7 @@
 
       <tr>
         <td>Nutzer (Prozess)</td>
-        <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: E53 -->
-          <input class="xl-input" type="number" step="0.0001" name="E53_user_process" value="{{ sheet.E53_user_process }}">
-        </td>
+        <td class="num refcell">1,00</td>
         <td class="num refcell">{{ calc.F53|de_number:0 }}</td>
         <td class="num refcell">{{ calc.G53|de_number:2 }}</td>
         <td class="refcell"></td>
@@ -752,14 +666,11 @@
       <tr>
         <td>Strom (On-Site)*</td>
         <td class="num refcell">-1,80</td>
-        <td class="num refcell">
-          <!-- Excel-Quelle: =IF('05 PHOTOVOLTAIK'!Q111 > '01 ERGEBNIS ENERGIE'!F68; ...) -->
-          {{ calc.F78|de_number:0 }}
-        </td>
+        <td class="num refcell">{{ calc.F78|de_number:0 }}</td>
         <td class="num refcell">{{ calc.G78|de_number:2 }}</td>
         <td class="refcell"></td>
         <td class="xl-input-wrap">
-          <!-- Excel-Eingabe: I78 (Deckungsanteil On-Site) -->
+          <!-- bleibt editierbar -->
           <input class="xl-input" type="number" step="0.01" min="0" max="1" name="I78_pv_self_share" value="{{ sheet.I78_pv_self_share }}">
         </td>
       </tr>
@@ -770,10 +681,7 @@
         <td class="num refcell">{{ calc.F79|de_number:0 }}</td>
         <td class="num refcell">{{ calc.G79|de_number:2 }}</td>
         <td class="refcell"></td>
-        <td class="refcell">
-          <!-- Excel: I79 = 1 - I75 - I76 ; hier pragmatisch: 1 - I78 -->
-          {{ calc.I79 }}
-        </td>
+        <td class="refcell">{{ calc.I79 }}</td>
       </tr>
 
       <tr>
@@ -802,10 +710,7 @@
     <table class="xl-table">
       <tr class="xl-sumrow">
         <td class="sumlabel" colspan="2">Strom (On-Site)</td>
-        <td class="num">
-          <!-- Excel-Quelle: ='05 PHOTOVOLTAIK'!Q111-'01 ERGEBNIS ENERGIE'!F78/E78 -->
-          {{ calc.F87|de_number:0 }}
-        </td>
+        <td class="num">{{ calc.F87|de_number:0 }}</td>
         <td class="num">{{ calc.G87|de_number:2 }}</td>
         <td colspan="2"></td>
       </tr>

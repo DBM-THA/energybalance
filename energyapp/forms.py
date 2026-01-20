@@ -1,4 +1,4 @@
-from .models import Building, SummerProtection
+from .models import Building, SummerProtection, EnergyResultSheet01
 from django import forms
 
 class SimpleBuildingForm(forms.ModelForm):
@@ -153,4 +153,16 @@ class GwpCompensationForm(forms.ModelForm):
             "factor_heat_avg",
             "factor_gas",
             "factor_electricity",
+        ]
+
+from django import forms
+
+class EnergyResultSheet01Form(forms.ModelForm):
+    class Meta:
+        model = EnergyResultSheet01
+        fields = [
+            "project",
+            "location",
+            "E42_solar_generation_factor",
+
         ]
