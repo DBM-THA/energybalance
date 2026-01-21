@@ -173,7 +173,67 @@ class Layer(models.Model):
 # GROUP 3: Internal Gains
 # ============================
 class InternalGains(models.Model):
-    dummy = models.CharField(max_length=100)
+    building = models.OneToOneField(
+        Building,
+        on_delete=models.CASCADE,
+        related_name="internal_gains",
+        null=True,
+        blank=True,
+    )
+
+    # Allgemein
+    area_m2 = models.FloatField("Bezugsfläche [m²]", default=0)
+
+    # Schritt 1 – Personen (Excel blau)
+    persons_count = models.FloatField("Menge Personen", default=0)
+    persons_spec_w = models.FloatField("spez. Leistung [W/P]", default=0)
+    persons_h_per_day = models.FloatField("Zeit Stunden pro Tag [h/d]", default=0)
+    persons_days_per_year = models.FloatField("Zeit Tage im Jahr [d/a]", default=0)
+
+    # Schritt 2 – Geräte (Excel blau)
+    devices_count = models.FloatField("Menge Geräte", default=0)
+    devices_spec_w = models.FloatField("spez. Leistung [W/Stk]", default=0)
+    devices_h_per_day = models.FloatField("Zeit Stunden pro Tag [h/d]", default=0)
+    devices_days_per_year = models.FloatField("Zeit Tage im Jahr [d/a]", default=0)
+
+    # Schritt 3 – Sonstige Wärmequellen (Excel blau)
+    other_count = models.FloatField("Menge sonstige Quellen", default=0)
+    other_spec_w = models.FloatField("Leistung [W]", default=0)
+    other_h_per_day = models.FloatField("Zeit Stunden pro Tag [h/d]", default=0)
+    other_days_per_year = models.FloatField("Zeit Tage im Jahr [d/a]", default=0)
+
+    # Berechnung wie Excel (nicht speichern)
+    @property
+    def persons_power_w(self):
+        return self.persons_count * self.persons_spec_w
+
+    @property
+    def persons_energy_kwh_a(self):
+        return self.persons_power_w * self.persons_h_per_day * self.persons_days_per_year / 1000
+
+    @property
+    def devices_power_w(self):
+        return self.devices_count * self.devices_spec_w
+
+    @property
+    def devices_energy_kwh_a(self):
+        return self.devices_power_w * self.devices_h_per_day * self.devices_days_per_year / 1000
+
+    @property
+    def other_power_w(self):
+        return self.other_count * self.other_spec_w
+
+    @property
+    def other_energy_kwh_a(self):
+        return self.other_power_w * self.other_h_per_day * self.other_days_per_year / 1000
+
+    @property
+    def total_power_w(self):
+        return self.persons_power_w + self.devices_power_w + self.other_power_w
+
+    @property
+    def total_energy_kwh_a(self):
+        return self.persons_energy_kwh_a + self.devices_energy_kwh_a + self.other_energy_kwh_a
 
 # ============================
 # GROUP 4: Ventilation
@@ -385,3 +445,4 @@ class SummerProtection(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.orientation}) – {self.building.name}"
+

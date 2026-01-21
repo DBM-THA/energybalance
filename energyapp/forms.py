@@ -124,3 +124,103 @@ class GwpCompensationForm(forms.ModelForm):
             "electricity_kwh",
         ]
 
+
+# Internal Gains (Excel
+
+class InternalGainsForm(forms.Form):
+    # Allgemein
+    area_m2 = forms.FloatField(
+        label="Bezugsfläche [m²]",
+        required=False,
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+
+    # Schritt 1 – Personen (blaue Excel Felder)
+    persons_count = forms.FloatField(
+        label="Menge Personen",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    persons_spec_w = forms.FloatField(
+        label="spez. Leistung [W/P]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    persons_h_per_day = forms.FloatField(
+        label="Zeit Stunden pro Tag [h/d]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    persons_days_per_year = forms.FloatField(
+        label="Zeit Tage im Jahr [d/a]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "1"}),
+    )
+
+    # Schritt 2 – Geräte (blaue Excel Felder)
+    devices_count = forms.FloatField(
+        label="Menge Geräte",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    devices_spec_w = forms.FloatField(
+        label="spez. Leistung [W/Stk]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    devices_h_per_day = forms.FloatField(
+        label="Zeit Stunden pro Tag [h/d]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    devices_days_per_year = forms.FloatField(
+        label="Zeit Tage im Jahr [d/a]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "1"}),
+    )
+
+    # Schritt 3 – Sonstige Wärmequellen (blaue Excel Felder)
+    other_count = forms.FloatField(
+        label="Menge sonstige Quellen",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    other_spec_w = forms.FloatField(
+        label="Leistung [W]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    other_h_per_day = forms.FloatField(
+        label="Zeit Stunden pro Tag [h/d]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
+    other_days_per_year = forms.FloatField(
+        label="Zeit Tage im Jahr [d/a]",
+        min_value=0,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "1"}),
+    )
+#---------------------------------
+#Internal Gains
+#-----------------------------------
+from .models import InternalGains
+
+class InternalGainsForm(forms.ModelForm):
+    class Meta:
+        model = InternalGains
+        fields = [
+            "area_m2",
+            "persons_count",
+            "persons_spec_w",
+            "persons_h_per_day",
+            "persons_days_per_year",
+            "devices_count",
+            "devices_spec_w",
+            "devices_h_per_day",
+            "devices_days_per_year",
+            "other_count",
+            "other_spec_w",
+            "other_h_per_day",
+            "other_days_per_year",
+        ]

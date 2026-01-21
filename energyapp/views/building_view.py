@@ -6,6 +6,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from energyapp.forms import BuildingForm,SimpleBuildingForm
 from energyapp.logic.building import calc_heating_demand
 from energyapp.models import Building
+from energyapp.forms import BuildingForm, SimpleBuildingForm, InternalGainsForm
+
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -34,6 +36,8 @@ def dashboard(request):
 
 
 def building_create_detailed(request):
+    last_building = Building.objects.order_by("-id").first()
+
     result = None
 
     if request.method == "POST":
@@ -76,12 +80,16 @@ def building_create_detailed(request):
     else:
         form = BuildingForm()
 
+
+
     context = {
         "form": form,
         "result": result,
         "edit_mode": False,
         "simple_mode": False,
+        "last_building": last_building,
     }
+
     return render(request, "energyapp/building_form.html", context)
 
 def building_create_simple(request):
@@ -531,9 +539,132 @@ def building_result_pdf(request, pk):
     )
     return response
 
-def internal_gains(request):
-    # Platzhalter – später durch richtigen Inhalt ersetzen (Derya, Lucy)
-    return render(request, "energyapp/internal_gains.html")
+def internal_gains(request, building_id=None):
+    building = None
+    if building_id:
+        building = Building.objects.filter(id=building_id).first()
+
+    HP_SHARE = 0.51
+    rows = None
+    summary = None
+
+    def calc_row(name, qty, spec_w, h_day, d_year, area):
+        qty = float(qty or 0)
+        spec_w = float(spec_w or 0)
+        h_day = float(h_day or 0)
+        d_year = float(d_year or 0)
+        area = float(area or 0)
+
+        power_w = qty * spec_w
+        hours_per_year = h_day * d_year
+        energy_kwh_a = power_w * hours_per_year / 1000.0
+
+        power_w_m2 = None
+        energy_kwh_m2a = None
+        if area > 0:
+            power_w_m2 = power_w / area
+            energy_kwh_m2a = energy_kwh_a / area
+
+        hp_energy_kwh_a = energy_kwh_a * HP_SHARE
+        hp_energy_kwh_m2a = None
+        if area > 0:
+            hp_energy_kwh_m2a = hp_energy_kwh_a / area
+
+        return {
+            "name": name,
+            "qty": qty,
+            "spec_w": spec_w,
+            "power_w": power_w,
+            "power_w_m2": power_w_m2,
+            "h_per_day": h_day,
+            "days_per_year": d_year,
+            "hours_per_year": hours_per_year,
+            "energy_kwh_a": energy_kwh_a,
+            "energy_kwh_m2a": energy_kwh_m2a,
+            "hp_share": 51,
+            "hp_energy_kwh_a": hp_energy_kwh_a,
+            "hp_energy_kwh_m2a": hp_energy_kwh_m2a,
+        }
+
+    if request.method == "POST":
+        form = InternalGainsForm(request.POST)
+
+        if form.is_valid():
+            cd = form.cleaned_data
+            area = cd.get("area_m2") or 0
+
+            rows = [
+                calc_row(
+                    "Personen",
+                    cd.get("persons_count"),
+                    cd.get("persons_spec_w"),
+                    cd.get("persons_h_per_day"),
+                    cd.get("persons_days_per_year"),
+                    area,
+                ),
+                calc_row(
+                    "Geräte",
+                    cd.get("devices_count"),
+                    cd.get("devices_spec_w"),
+                    cd.get("devices_h_per_day"),
+                    cd.get("devices_days_per_year"),
+                    area,
+                ),
+                calc_row(
+                    "Sonstige Wärmequellen",
+                    cd.get("other_count"),
+                    cd.get("other_spec_w"),
+                    cd.get("other_h_per_day"),
+                    cd.get("other_days_per_year"),
+                    area,
+                ),
+            ]
+
+            total_power_w = sum(r["power_w"] for r in rows)
+            total_energy_kwh_a = sum(r["energy_kwh_a"] for r in rows)
+
+            total_power_w_m2 = None
+            total_energy_kwh_m2a = None
+            if float(area or 0) > 0:
+                total_power_w_m2 = total_power_w / float(area)
+                total_energy_kwh_m2a = total_energy_kwh_a / float(area)
+
+            hp_energy_kwh_a = total_energy_kwh_a * HP_SHARE
+            hp_energy_kwh_m2a = None
+            if float(area or 0) > 0:
+                hp_energy_kwh_m2a = hp_energy_kwh_a / float(area)
+
+            summary = {
+                "total_power_w": total_power_w,
+                "total_power_w_m2": total_power_w_m2,
+                "total_energy_kwh_a": total_energy_kwh_a,
+                "total_energy_kwh_m2a": total_energy_kwh_m2a,
+                "hp_share": 51,
+                "hp_energy_kwh_a": hp_energy_kwh_a,
+                "hp_energy_kwh_m2a": hp_energy_kwh_m2a,
+            }
+
+        return render(
+            request,
+            "energyapp/internal_gains.html",
+            {
+                "form": form,
+                "rows": rows,
+                "summary": summary,
+                "building": building,
+            },
+        )
+
+    # GET
+    form = InternalGainsForm()
+    return render(
+        request,
+        "energyapp/internal_gains.html",
+        {"form": form, "rows": None, "summary": None},
+    )
+
+
+
 
 def envelope_detail(request):
     # Platzhalter – später durch richtigen Inhalt ersetzen

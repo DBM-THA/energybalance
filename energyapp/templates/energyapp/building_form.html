@@ -179,28 +179,34 @@
     {% endif %}
 
     {% if not simple_mode %}
-    <div class="col-md-6">
-        <fieldset>
-            <legend class="d-flex align-items-center">
-                <span>Innere Gewinne</span>
-                <a href="{% url 'internal_gains' %}"
-                   class="btn btn-outline-secondary btn-sm ms-2">
-                    Details
-                </a>
-            </legend>
-            <div class="mb-3">
-                {{ form.person_density.label_tag }}
-                {{ form.person_density|add_class:"form-control" }}
-                {{ form.person_density.errors }}
-            </div>
-            <div class="mb-3">
-                {{ form.persons.label_tag }}
-                {{ form.persons|add_class:"form-control" }}
-                {{ form.persons.errors }}
-            </div>
-        </fieldset>
-    </div>
-    {% endif %}
+<div class="col-md-6">
+    <fieldset>
+        <legend class="d-flex align-items-center">
+            <span>Innere Gewinne</span>
+
+            {% if last_building %}
+            <a href="{% url 'internal_gains' last_building.id %}"
+               class="btn btn-outline-secondary btn-sm ms-2">
+                Details
+            </a>
+            {% endif %}
+        </legend>
+
+        <div class="mb-3">
+            {{ form.person_density.label_tag }}
+            {{ form.person_density|add_class:"form-control" }}
+            {{ form.person_density.errors }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.persons.label_tag }}
+            {{ form.persons|add_class:"form-control" }}
+            {{ form.persons.errors }}
+        </div>
+    </fieldset>
+</div>
+{% endif %}
+
 
 
     <div class="col-md-6">

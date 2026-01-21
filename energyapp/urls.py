@@ -22,7 +22,8 @@ urlpatterns = [
     path("summer/step1/", summer_steps_views.summer_step1, name="summer_step1"),
     path("summer/step2/", summer_steps_views.summer_step2, name="summer_step2"),
     path("summary-dashboard/", building_view.summary_dashboard, name="summary_dashboard"),
-    path("internal-gains/", building_view.internal_gains, name="internal_gains"),
+
+
     path(
         "buildings/<int:building_id>/gwp/",
         gwp_overview,
@@ -38,6 +39,20 @@ urlpatterns = [
         gwp_compensation_edit,
         name="gwp_compensation_edit",
     ),
+
+    #Internal Gains
+    path(
+        "building/internal-gains/",
+        building_view.internal_gains,
+        name="internal_gains_base",
+    ),
+    # Internal Gains – mit Gebäude
+    path(
+        "buildings/<int:building_id>/internal-gains/",
+        building_view.internal_gains,
+        name="internal_gains",
+    ),
+
     path("envelope/", building_view.envelope_detail, name="envelope_detail"),
     path("solar-gains/", building_view.solar_gains, name="solar_gains"),
 ]
