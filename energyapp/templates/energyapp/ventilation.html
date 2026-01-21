@@ -24,11 +24,12 @@ button.secondary{background:#334155;color:var(--text)}
 </head>
 <body>
 
-<h1>💨 Lüftungs-Mix Rechner</h1>
+<h1> Lüftungs-Mix Rechner</h1>
 
 <div class="card">
   <label>Gesamtfläche (m²)</label>
-  <input id="totalArea" type="number" value="1000">
+  <input id="totalArea" type="number" value="{{ total_area }}" readonly>
+
 
   <label style="margin-top:10px;display:block">Strompreis (€/kWh)</label>
   <input id="priceInput" type="number" step="0.01" value="0.40">

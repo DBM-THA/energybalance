@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Gebäude auswählen – Lüftung</title>
+<style>
+body {
+  font-family: system-ui;
+  background: #020617;
+  color: #e5e7eb;
+  padding: 40px;
+}
+.card {
+  background: #111827;
+  padding: 20px;
+  border-radius: 16px;
+  max-width: 600px;
+  margin: auto;
+}
+a {
+  display: block;
+  padding: 12px;
+  margin: 8px 0;
+  background: #1f2933;
+  border-radius: 8px;
+  color: #22c55e;
+  text-decoration: none;
+}
+a:hover {
+  background: #22c55e;
+  color: #052e16;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Gebäude für Lüftungsberechnung auswählen</h1>
+
+  {% for b in buildings %}
+    <a href="{% url 'ventilation-detail' b.id %}">
+      {{ b.name }} – {{ b.ngf_t|default:"NGF nicht berechnet" }} m²
+    </a>
+  {% empty %}
+    <p>Keine Gebäude vorhanden.</p>
+  {% endfor %}
+</div>
+
+</body>
+</html>
