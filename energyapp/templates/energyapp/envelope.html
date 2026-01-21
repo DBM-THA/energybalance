@@ -2,185 +2,441 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Bauteil – U-Wert Analyse</title>
+  <meta charset="UTF-8">
+  <title>Envelope – U-Wert Berechnung</title>
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 
-            margin-bottom: 12px;
-            padding: 15px;
-            border-radius: 4px;
-        }
-    </style>
+  <style>
+    body { background-color: #f4f6f9; }
+    .card { border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.05); }
+    .layer-card { border: 1px solid #dee2e6; border-radius: 10px; padding: 15px; margin-bottom: 12px; background: #fff; }
+    .section-title { font-weight: 600; letter-spacing: 0.3px; }
+    .kpi-box { border: 1px solid #dee2e6; border-radius: 12px; padding: 14px; background: #f8f9fa; text-align: center; min-width: 190px; }
+    .kpi-value { font-size: 1.3rem; font-weight: 700; }
+    .muted { font-size: 0.85rem; color: #6c757d; }
+  </style>
 </head>
 
+<body>
+<div class="container my-5">
 
+  <h2 class="mb-4">🏗️ Envelope – U-Wert Analyse</h2>
 
-<body class="bg-light">
+  {% if ui_error %}
+    <div class="alert alert-warning">{{ ui_error }}</div>
+  {% endif %}
 
-<div class="container mt-5 mb-5">
+  <!-- ✅ Fehleranzeige: falls Speichern fehlschlägt -->
+  {% if form.errors or formset.errors or formset.non_form_errors %}
+    <div class="alert alert-danger">
+      <div class="fw-bold mb-2">❌ Speichern fehlgeschlagen – Django Fehler:</div>
 
-    <h2 class="mb-4">🏗️ Bauteil für U-Wert-Analyse anlegen</h2>
-
-    <form method="POST">
-        {% csrf_token %}
-
-        <!-- ========================================= -->
-        <!--           BAUTEIL-INFOS                   -->
-        <!-- ========================================= -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                Grunddaten des Bauteils
-            </div>
-
-            <div class="card-body">
-
-                <!-- Bauteiltyp -->
-                <div class="mb-3">
-                    <label class="form-label">Bauteiltyp</label>
-                    {{ form.building_part }}
-                </div>
-
-                <!-- Name -->
-                <div class="mb-3">
-                    <label class="form-label">Bezeichnung</label>
-                    {{ form.name }}
-                </div>
-
-                <!-- Umschalter -->
-                <div class="form-check form-switch mb-3">
-                    {{ form.use_custom_layers }}
-                    <label class="form-check-label">
-                        Eigene Schichten verwenden?
-                    </label>
-                </div>
-
-                <!-- Externer U-Wert -->
-                <div id="external_u_value_block" class="mb-3">
-                    <label class="form-label">Externer U-Wert (W/m²K)</label>
-                    {{ form.u_value_external }}
-                </div>
-
-            </div>
+      {% if form.errors %}
+        <div class="mb-2">
+          <div class="fw-bold">Bauteil-Form Errors:</div>
+          <pre style="white-space:pre-wrap;">{{ form.errors }}</pre>
         </div>
+      {% endif %}
 
-
-        <!-- ========================================= -->
-        <!--             SCHICHTEN-EINGABE             -->
-        <!-- ========================================= -->
-        <div class="card mb-4">
-            <div class="card-header bg-secondary text-white">
-                Schichtaufbau (Innen → Material → Außen)
-            </div>
-
-            <div class="card-body">
-
-                {{ formset.management_form }}
-
-                <div id="layers-container">
-                    {% for layer_form in formset %}
-                        <div class="layer-card">
-
-                            <!-- Layer type & name -->
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Schicht-Typ</label>
-                                    {{ layer_form.layer_type }}
-                                </div>
-
-                                <div class="col-md-8 mb-3">
-                                    <label class="form-label">Name</label>
-                                    {{ layer_form.name }}
-                                </div>
-                            </div>
-
-                            <!-- Dicke & lambda (nur Material) -->
-                            <div class="row layer-material-fields">
-                                <div class="col-md-4 mb-3">
-                                    <label>Dicke d (m)</label>
-                                    {{ layer_form.thickness }}
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label>Wärmeleitfähigkeit λ (W/mK)</label>
-                                    {{ layer_form.lambda_value }}
-                                </div>
-                            </div>
-
-                            <!-- R-Wert -->
-                            <div class="row layer-rvalue-field">
-                                <div class="col-md-4 mb-3">
-                                    <label>Widerstand R (m²K/W)</label>
-                                    {{ layer_form.R_value }}
-                                </div>
-                            </div>
-
-                            <!-- Löschen -->
-                            {% if layer_form.DELETE %}
-                                <div class="form-check mt-2">
-                                    {{ layer_form.DELETE }}
-                                    <label class="form-check-label">Schicht löschen</label>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-
-            </div>
+      {% if formset.non_form_errors %}
+        <div class="mb-2">
+          <div class="fw-bold">Formset Non-Form Errors:</div>
+          <pre style="white-space:pre-wrap;">{{ formset.non_form_errors }}</pre>
         </div>
+      {% endif %}
 
+      {% if formset.errors %}
+        <div class="mb-2">
+          <div class="fw-bold">Schichten-Errors pro Zeile:</div>
+          <pre style="white-space:pre-wrap;">{{ formset.errors }}</pre>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
 
-        <!-- ========================================= -->
-        <!--                 ABSENDEN                  -->
-        <!-- ========================================= -->
-        <button type="submit" class="btn btn-success btn-lg">
-            💾 Bauteil speichern
-        </button>
+  <!-- BAUTEIL AUSWÄHLEN -->
+  <div class="card mb-4">
+    <div class="card-header bg-dark text-white section-title">
+      Bauteil auswählen
+    </div>
+    <div class="card-body">
+      <form method="GET">
+        {% if building_id %}
+          <input type="hidden" name="building_id" value="{{ building_id }}">
+        {% endif %}
 
-    </form>
+        <select name="component" class="form-select" onchange="this.form.submit()">
+          <option value="">Bitte auswählen …</option>
+          <option value="kellerdecke" {% if selected_component == "kellerdecke" %}selected{% endif %}>Kellerdecke</option>
+          <option value="dach" {% if selected_component == "dach" %}selected{% endif %}>Dach</option>
+          <option value="aw_nord" {% if selected_component == "aw_nord" %}selected{% endif %}>Außenwand Nord</option>
+          <option value="aw_sued" {% if selected_component == "aw_sued" %}selected{% endif %}>Außenwand Süd</option>
+          <option value="aw_ost" {% if selected_component == "aw_ost" %}selected{% endif %}>Außenwand Ost</option>
+          <option value="aw_west" {% if selected_component == "aw_west" %}selected{% endif %}>Außenwand West</option>
+          <option value="openings" {% if selected_component == "openings" %}selected{% endif %}>Fenster / Tür</option>
+        </select>
+      </form>
+    </div>
+  </div>
+
+  <!-- FORM -->
+<form method="POST">
+  {% csrf_token %}
+
+  {% if building_id %}
+    <input type="hidden" name="building_id" value="{{ building_id }}">
+  {% endif %}
+
+  {% if selected_element %}
+    <input type="hidden" name="element_id" value="{{ selected_element.id }}">
+  {% endif %}
+
+  <input type="hidden" name="component" value="{{ selected_component }}">
+
+  <!-- SCHICHTEN -->
+  <div class="card mb-4">
+    <div class="card-header bg-dark text-white section-title">
+      Schichtaufbau (Innen → Außen)
+    </div>
+
+    <div class="card-body">
+
+      {{ formset.management_form }}
+
+      <div id="layers-container">
+        {% for layer_form in formset %}
+          <div class="layer-card">
+
+            {{ layer_form.id }}
+
+            <!-- layer_type versteckt -->
+            <div style="display:none;">
+              {{ layer_form.layer_type }}
+            </div>
+
+            <div class="mb-3">
+              <label>Schicht / Material</label>
+              {{ layer_form.name }}
+            </div>
+
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label>Dicke d (m)</label>
+                {{ layer_form.thickness }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label>λ (W/mK)</label>
+                {{ layer_form.lambda_value }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label>R (m²K/W)</label>
+                {{ layer_form.R_value }}
+              </div>
+            </div>
+
+            {% if layer_form.DELETE %}
+              <div class="form-check">
+                {{ layer_form.DELETE }}
+                <label class="form-check-label">Schicht entfernen</label>
+              </div>
+            {% endif %}
+
+          </div>
+        {% endfor %}
+      </div>
+
+      <template id="empty-form-template">
+        <div class="layer-card">
+          <div style="display:none;">
+            {{ formset.empty_form.layer_type }}
+          </div>
+
+          <div class="mb-3">
+            <label>Schicht / Material</label>
+            {{ formset.empty_form.name }}
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label>Dicke d (m)</label>
+              {{ formset.empty_form.thickness }}
+            </div>
+            <div class="col-md-4 mb-3">
+              <label>λ (W/mK)</label>
+              {{ formset.empty_form.lambda_value }}
+            </div>
+            <div class="col-md-4 mb-3">
+              <label>R (m²K/W)</label>
+              {{ formset.empty_form.R_value }}
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <button type="button" id="add-layer-btn" class="btn btn-outline-secondary mt-3">
+        ➕ Schicht hinzufügen
+      </button>
+
+    </div>
+  </div>
+
+  <!-- GRUNDDATEN -->
+  <div class="card mb-4">
+    <div class="card-header bg-secondary text-white section-title">
+      Grunddaten des Bauteils
+    </div>
+    <div class="card-body">
+
+      <div class="mb-3">
+        <label>Bezeichnung</label>
+        {{ form.name }}
+      </div>
+
+      <div class="form-check form-switch mb-3">
+        {{ form.use_custom_layers }}
+        <label class="form-check-label">
+          U-Wert über eigenen Schichtaufbau berechnen
+        </label>
+      </div>
+
+      <div id="external_u_value_block" class="mb-3">
+        <label>Externer U-Wert (W/m²K)</label>
+        {{ form.u_value_external }}
+      </div>
+
+      <div class="d-flex flex-wrap gap-3 mt-4">
+        <div class="kpi-box">
+          <div class="muted">Σ R Schichten</div>
+          <div class="kpi-value" id="sumR">–</div>
+        </div>
+        <div class="kpi-box">
+          <div class="muted">U-Wert live</div>
+          <div class="kpi-value" id="uLive">–</div>
+        </div>
+        <div class="kpi-box">
+          <div class="muted">Gespeichert</div>
+          <div class="kpi-value">
+            {% if saved_u %}{{ saved_u|floatformat:4 }}{% else %}–{% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="btn btn-success btn-lg w-100">
+    💾 Speichern
+  </button>
+
+</form>
+
+<hr class="my-5">
+
+<!-- 📋 IMMER Liste anzeigen -->
+<div class="card">
+  <div class="card-header bg-dark text-white section-title">
+    📋 Gespeicherte Bauteile
+  </div>
+  <div class="card-body">
+
+    {% if saved_elements %}
+      {% for el in saved_elements %}
+        <div class="card mb-3">
+          <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <h5 class="mb-1">{{ el.name }}</h5>
+                <div class="muted">Wärmestrom: {{ el.get_heat_flow_display }}</div>
+              </div>
+
+              <div class="text-end">
+                <div class="kpi-value">
+                  {% if el.u_value_calculated %}
+                    {{ el.u_value_calculated|floatformat:4 }}
+                  {% else %}
+                    –
+                  {% endif %}
+                </div>
+                <div class="muted">U-Wert (W/m²K)</div>
+
+                <a class="btn btn-sm btn-outline-primary mt-2"
+                   href="?{% if building_id %}building_id={{ building_id }}&{% endif %}component={{ selected_component }}&element_id={{ el.id }}">
+                  ✏️ Bearbeiten
+                </a>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <div class="section-title mb-2">Schichten</div>
+
+              {% if el.layers.all %}
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle">
+                    <thead>
+                      <tr>
+                        <th>Material</th>
+                        <th class="text-end">d (m)</th>
+                        <th class="text-end">λ (W/mK)</th>
+                        <th class="text-end">R (m²K/W)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for layer in el.layers.all %}
+                        <tr>
+                          <td>{{ layer.name }}</td>
+                          <td class="text-end">{% if layer.thickness %}{{ layer.thickness|floatformat:4 }}{% else %}–{% endif %}</td>
+                          <td class="text-end">{% if layer.lambda_value %}{{ layer.lambda_value|floatformat:4 }}{% else %}–{% endif %}</td>
+                          <td class="text-end">{% if layer.R_value %}{{ layer.R_value|floatformat:4 }}{% else %}–{% endif %}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <div class="text-muted">Keine Schichten gespeichert.</div>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="text-muted">Noch keine Bauteile gespeichert.</div>
+    {% endif %}
+
+  </div>
 </div>
 
 
-<!-- ======================= -->
-<!--       JAVASCRIPT        -->
-<!-- ======================= -->
 <script>
-    function refreshLayerFields() {
-        document.querySelectorAll(".layer-card").forEach(card => {
+  var R_FIXED = parseFloat(String("{{ R_FIXED }}").replace(",", ".")) || 0.17;
 
-            const type = card.querySelector(".layer-type").value;
-            const matFields = card.querySelector(".layer-material-fields");
-            const rField = card.querySelector(".layer-rvalue-field");
+  function num(v) {
+    var x = parseFloat(String(v || "").replace(",", "."));
+    return isNaN(x) ? null : x;
+  }
 
-            if (type === "layer") {
-                matFields.style.display = "flex";
-                rField.style.display = "none";
-            } else {
-                matFields.style.display = "none";
-                rField.style.display = "block";
-            }
-        });
+  function ensureLayerInputClasses() {
+    var cards = document.querySelectorAll(".layer-card");
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+
+      var t = card.querySelector("input[name$='-thickness']");
+      if (t) t.classList.add("layer-thickness");
+
+      var l = card.querySelector("input[name$='-lambda_value']");
+      if (l) l.classList.add("layer-lambda");
+
+      var r = card.querySelector("input[name$='-R_value']");
+      if (r) r.classList.add("layer-r");
+    }
+  }
+
+  function toggleExternalU() {
+    var cb = document.getElementById("id_use_custom_layers");
+    var block = document.getElementById("external_u_value_block");
+    if (!cb || !block) return;
+    block.style.display = cb.checked ? "none" : "block";
+  }
+
+  function recalc() {
+    ensureLayerInputClasses();
+
+    var sumR = 0;
+
+    var cards = document.querySelectorAll(".layer-card");
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+
+      var d = num(card.querySelector(".layer-thickness") ? card.querySelector(".layer-thickness").value : "");
+      var lam = num(card.querySelector(".layer-lambda") ? card.querySelector(".layer-lambda").value : "");
+
+      var rField = card.querySelector(".layer-r");
+      if (!rField) continue;
+
+      var del = card.querySelector("input[type=checkbox][name$='-DELETE']");
+      if (del && del.checked) continue;
+
+      if (d !== null && lam !== null && lam > 0) {
+        rField.value = (d / lam).toFixed(4);
+        rField.readOnly = true;
+      } else {
+        rField.readOnly = false;
+      }
+
+      var r = num(rField.value);
+      if (r !== null && r > 0) sumR += r;
     }
 
-    function toggleExternalUValue() {
-        const enableLayers = document.querySelector("#id_use_custom_layers").checked;
-        document.querySelector("#external_u_value_block").style.display =
-            enableLayers ? "none" : "block";
+    var sumREl = document.getElementById("sumR");
+    if (sumREl) sumREl.textContent = (sumR > 0) ? sumR.toFixed(4) : "–";
+
+    var uLiveEl = document.getElementById("uLive");
+    if (uLiveEl) {
+      if (sumR <= 0) {
+        uLiveEl.textContent = "–";
+      } else {
+        var totalR = sumR + R_FIXED;
+        uLiveEl.textContent = (1 / totalR).toFixed(4);
+      }
+    }
+  }
+
+  function getTotalFormsInput() {
+    // ✅ Prefix-agnostisch: funktioniert egal ob layers-, layer_set-, etc.
+    return document.querySelector("input[name$='-TOTAL_FORMS']");
+  }
+
+  function getFormPrefix(totalEl) {
+    // name z.B. "layers-TOTAL_FORMS" oder "layer_set-TOTAL_FORMS"
+    // => prefix ist alles vor "-TOTAL_FORMS"
+    if (!totalEl) return null;
+    var name = totalEl.getAttribute("name") || "";
+    return name.replace(/-TOTAL_FORMS$/, "");
+  }
+
+  function addLayer() {
+    var container = document.getElementById("layers-container");
+    var total = getTotalFormsInput();
+    var tpl = document.getElementById("empty-form-template");
+    if (!container || !total || !tpl) return;
+
+    var prefix = getFormPrefix(total);
+    var idx = parseInt(total.value, 10);
+
+    var html = tpl.innerHTML.replace(/__prefix__/g, idx);
+
+    var div = document.createElement("div");
+    div.innerHTML = html.trim();
+    var node = div.firstChild;
+    container.appendChild(node);
+
+    total.value = idx + 1;
+
+    // ✅ layer_type für neue Zeile automatisch setzen (ohne Anzeige)
+    if (prefix) {
+      var lt = node.querySelector("[name='" + prefix + "-" + idx + "-layer_type']");
+      if (lt) lt.value = "layer";
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        refreshLayerFields();
-        toggleExternalUValue();
+    ensureLayerInputClasses();
+    recalc();
+  }
 
-        document.querySelectorAll(".layer-type").forEach(el => {
-            el.addEventListener("change", refreshLayerFields);
-        });
+  document.addEventListener("input", recalc);
+  document.addEventListener("change", recalc);
 
-        document
-            .querySelector("#id_use_custom_layers")
-            .addEventListener("change", toggleExternalUValue);
-    });
+  var addBtn = document.getElementById("add-layer-btn");
+  if (addBtn) addBtn.addEventListener("click", addLayer);
+
+  var cb = document.getElementById("id_use_custom_layers");
+  if (cb) cb.addEventListener("change", toggleExternalU);
+
+  ensureLayerInputClasses();
+  toggleExternalU();
+  recalc();
 </script>
 
 </body>

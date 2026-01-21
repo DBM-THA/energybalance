@@ -11,16 +11,21 @@
             Grundfläche: {{ building.result_floor_area|default:0|floatformat:0 }} m²
         </p>
     </div>
-    <div class="page-header-actions">
-        <a href="{% url 'building_list' %}" class="btn btn-outline-secondary btn-sm">Zurück zur Liste</a>
-        <a href="{% url 'building_create' %}" class="btn btn-primary btn-sm">Neues Gebäude berechnen</a>
-        <a href="{% url 'building_edit' building.pk %}" class="btn btn-outline-primary btn-sm">
-            Dieses Gebäude bearbeiten
-        </a>
-        <a href="{% url 'building_result_pdf' building.pk %}" class="btn btn-outline-secondary btn-sm">
+        <div class="page-header-actions">
+            <a href="{% url 'building_list' %}" class="btn btn-outline-secondary btn-sm">Zurück zur Liste</a>
+            <a href="{% url 'building_create' %}" class="btn btn-primary btn-sm">Neues Gebäude berechnen</a>
+            <a href="{% url 'building_edit' building.pk %}" class="btn btn-outline-primary btn-sm">
+                Dieses Gebäude bearbeiten
+            </a>
+            <a href="{% url 'building_result_pdf' building.pk %}" class="btn btn-outline-secondary btn-sm">
             Bericht als PDF
-        </a>
-    </div>
+            </a>
+
+            <!-- ✅ NEU: Direkt zu euren Bauteilen (Envelope) -->
+            <a href="/envelope/?building_id={{ building.id }}" class="btn btn-outline-success btn-sm">
+            🏗️ Bauteile bearbeiten
+            </a>
+        </div>
 </div>
 
 

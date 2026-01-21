@@ -17,6 +17,12 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
+from energyapp.forms import EnvelopeElementForm, LayerFormSet
+from energyapp.models import EnvelopeElement, Building
+from django.shortcuts import get_object_or_404
+from energyapp.models import Building, EnvelopeElement, Layer
+
+
 
 
 
@@ -542,9 +548,196 @@ def internal_gains(request):
     # Platzhalter – später durch richtigen Inhalt ersetzen (Derya, Lucy)
     return render(request, "energyapp/internal_gains.html")
 
+
 def envelope_detail(request):
-    # Platzhalter – später durch richtigen Inhalt ersetzen
-    return render(request, "energyapp/envelope.html")
+    COMPONENT_CHOICES = {
+        "kellerdecke": "Kellerdecke",
+        "dach": "Dach",
+        "aw_nord": "Massive Außenwand Nord",
+        "aw_sued": "Massive Außenwand Süd",
+        "aw_ost": "Massive Außenwand Ost",
+        "aw_west": "Massive Außenwand West",
+        "openings": "Fenster / Tür",
+    }
+
+    # Auswahl
+    component = request.GET.get("component") or request.POST.get("component") or ""
+    component_label = COMPONENT_CHOICES.get(component, "")
+
+    # building_id optional (wenn ihr’s habt: perfekt)
+    building_id = request.GET.get("building_id") or request.POST.get("building_id") or ""
+    building = Building.objects.filter(pk=building_id).first() if building_id else None
+
+    # Rsi/Rse abhängig vom Bauteil
+    RSI_BY_FLOW = {"up": 0.10, "horizontal": 0.13, "down": 0.17}
+    RSE = 0.04
+    COMPONENT_TO_FLOW = {
+        "dach": "up",
+        "kellerdecke": "down",
+        "aw_nord": "horizontal",
+        "aw_sued": "horizontal",
+        "aw_ost": "horizontal",
+        "aw_west": "horizontal",
+        "openings": "horizontal",
+    }
+    heat_flow = COMPONENT_TO_FLOW.get(component, "horizontal")
+    R_FIXED = float(RSI_BY_FLOW[heat_flow] + RSE)
+
+    # Bearbeiten nur, wenn element_id explizit kommt
+    element_id = request.GET.get("element_id") or request.POST.get("element_id")
+    element = None
+    if element_id:
+        if building:
+            element = get_object_or_404(EnvelopeElement, pk=element_id, building=building)
+        else:
+            element = get_object_or_404(EnvelopeElement, pk=element_id)
+
+    # -------- POST: speichern --------
+    if request.method == "POST":
+        # Ohne Auswahl nicht speichern
+        if not component_label:
+            return redirect(request.path)
+
+        post = request.POST.copy()
+
+        # Name automatisch setzen
+        if not post.get("name"):
+            post["name"] = component_label
+
+        # ✅ layer_type serverseitig setzen (weil im Template versteckt)
+        prefix = LayerFormSet.get_default_prefix()  # meistens "layer_set" oder "layers" je nach Django
+        total = int(post.get(f"{prefix}-TOTAL_FORMS", "0") or "0")
+        for i in range(total):
+            post[f"{prefix}-{i}-layer_type"] = "layer"
+
+        form = EnvelopeElementForm(post, instance=element)
+        formset = LayerFormSet(post, instance=element)
+
+        if form.is_valid() and formset.is_valid():
+            element = form.save(commit=False)
+
+            # ✅ wenn building genutzt wird: korrekt verknüpfen
+            if building:
+                element.building = building
+
+            element.heat_flow = heat_flow
+
+            # ✅ Name fix auf Dropdown-Label (damit es konsistent ist)
+            element.name = component_label
+
+            element.save()
+
+            # Formset speichern (aber leere Zeilen ignorieren)
+            objs = formset.save(commit=False)
+            saved_any = False
+            for obj in objs:
+                obj.element = element
+                if (
+                    (obj.name and obj.name.strip())
+                    or (obj.thickness is not None)
+                    or (obj.lambda_value is not None)
+                    or (obj.R_value is not None)
+                ):
+                    obj.save()
+                    saved_any = True
+
+            for obj in formset.deleted_objects:
+                obj.delete()
+
+            # U-Wert berechnen (mit richtigem R_FIXED)
+            if element.use_custom_layers and saved_any:
+                element.calculate_u_value(R_fixed=R_FIXED)
+            elif (not element.use_custom_layers) and (element.u_value_external is not None):
+                element.u_value_calculated = element.u_value_external
+                element.save(update_fields=["u_value_calculated"])
+            else:
+                element.u_value_calculated = None
+                element.save(update_fields=["u_value_calculated"])
+
+            # ✅ PRG Redirect => danach ist Formular nicht mehr „gefüllt“
+            url = request.path + "?component=" + component + "&just_saved=1"
+            if building_id:
+                url += "&building_id=" + str(building_id)
+            return redirect(url)
+
+        # Wenn ungültig: Seite mit Fehlern zurückgeben
+        saved_elements = _get_saved_elements(building)
+        return render(request, "energyapp/envelope.html", {
+            "component_choices": COMPONENT_CHOICES,
+            "selected_component": component,
+            "selected_building": building,
+            "building_id": building_id,
+
+            "selected_element": element,
+            "form": form,
+            "formset": formset,
+
+            "R_FIXED": R_FIXED,
+            "saved_u": (element.u_value_calculated if element else None),
+
+            "show_saved_list": True,
+            "saved_elements": saved_elements,
+
+            "ui_error": "Speichern fehlgeschlagen – siehe rote Box (Form Errors).",
+        })
+
+    # -------- GET: anzeigen --------
+    just_saved = (request.GET.get("just_saved") == "1")
+
+    # Formular: nach Save wieder „frisch“ (leeres Formset), außer wenn Bearbeiten
+    if element_id and element:
+        form = EnvelopeElementForm(instance=element)
+        formset = LayerFormSet(instance=element)
+        saved_u = element.u_value_calculated
+    else:
+        initial = {"name": component_label} if component_label else {}
+        form = EnvelopeElementForm(initial=initial)
+        formset = LayerFormSet()
+        saved_u = None
+
+    saved_elements = _get_saved_elements(building) if just_saved else []
+
+    return render(request, "energyapp/envelope.html", {
+        "component_choices": COMPONENT_CHOICES,
+        "selected_component": component,
+        "selected_building": building,
+        "building_id": building_id,
+
+        "selected_element": element if element_id else None,
+        "form": form,
+        "formset": formset,
+
+        "R_FIXED": R_FIXED,
+        "saved_u": saved_u,
+
+        # ✅ Liste nur nach erfolgreichem Save
+        "show_saved_list": just_saved,
+        "saved_elements": saved_elements,
+        "ui_error": "",
+    })
+
+
+def _get_saved_elements(building):
+    qs = EnvelopeElement.objects.all()
+
+    # ✅ wichtig: sonst kommen „Kellerdecke“/alte Tests/andere Gebäude rein
+    if building:
+        qs = qs.filter(building=building)
+
+    qs = qs.order_by("-id").prefetch_related("layers")
+
+    # ✅ nur Elemente, die wirklich Inhalt haben
+    ids_with_layers = set(Layer.objects.values_list("element_id", flat=True).distinct())
+    return [
+        el for el in qs
+        if (el.id in ids_with_layers) or (el.u_value_external is not None) or (el.u_value_calculated is not None)
+    ]
+
+
+
+
+
+
 
 
 def solar_gains(request):

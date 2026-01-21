@@ -1,5 +1,7 @@
 from django.db import models
 
+
+
 # ============================
 # GROUP 1: Building Data
 # ============================
@@ -195,42 +197,100 @@ class EnergyResultSheet01(models.Model):
 # ============================
 # GROUP 2: Envelope Components
 # ============================
+from django.db import models
+
 class EnvelopeElement(models.Model):
-    """
-    Bauteil (Wand, Dach, Boden etc.)
-    Kann entweder
-      - einen extern gegebenen U-Wert haben ODER
-      - über Schichten selbst berechnet werden
-    """
+    FLOW_UP = "up"
+    FLOW_HORIZONTAL = "horizontal"
+    FLOW_DOWN = "down"
+
+    FLOW_CHOICES = [
+        (FLOW_UP, "Aufwärts"),
+        (FLOW_HORIZONTAL, "Horizontal"),
+        (FLOW_DOWN, "Abwärts"),
+    ]
+
+    building = models.ForeignKey(
+        "Building",
+        on_delete=models.CASCADE,
+        related_name="envelope_elements",
+        null=True,
+        blank=True,
+    )
+
+
     name = models.CharField(max_length=200)
+
+    # Wichtig: Richtung des Wärmestroms als Feld speichern
+    heat_flow = models.CharField(
+        max_length=20,
+        choices=FLOW_CHOICES,
+        default=FLOW_HORIZONTAL,
+    )
+
     use_custom_layers = models.BooleanField(
         default=True,
         help_text="Falls deaktiviert, wird ein vorgegebener U-Wert genutzt."
     )
+
     u_value_external = models.FloatField(
-        null=True, blank=True,
+        null=True,
+        blank=True,
         help_text="Falls vorhanden, extern vorgegebener U-Wert"
     )
-    u_value_calculated = models.FloatField(null=True, blank=True)
 
-    def calculate_u_value(self):
-        """Berechnet U = 1 / Summe(R) falls Schichten benutzt werden."""
+    u_value_calculated = models.FloatField(
+        null=True,
+        blank=True
+    )
+
+    @property
+    def rsi(self) -> float:
+        # Tabelle: Rsi abhängig von Wärmeflussrichtung
+        return {
+            self.FLOW_UP: 0.10,
+            self.FLOW_HORIZONTAL: 0.13,
+            self.FLOW_DOWN: 0.17,
+        }.get(self.heat_flow, 0.13)
+
+    @property
+    def rse(self) -> float:
+        # Tabelle: Rse immer 0.04
+        return 0.04
+
+    @property
+    def r_fixed(self) -> float:
+        return float(self.rsi + self.rse)
+
+    def calculate_u_value(self, R_fixed=0.17):
+        """
+        U = 1 / (Summe(R_schichten) + Rsi+Rse)
+        R_fixed wird aus der View übergeben:
+          - Dach: 0.10 + 0.04 = 0.14
+          - Wand/Fenster: 0.13 + 0.04 = 0.17
+          - Kellerdecke: 0.17 + 0.04 = 0.21
+        """
+
+        # Fall: externer U-Wert
         if not self.use_custom_layers:
             self.u_value_calculated = self.u_value_external
-            self.save()
+            self.save(update_fields=["u_value_calculated"])
             return self.u_value_calculated
 
         layers = self.layers.all()
-        if not layers:
+        if not layers.exists():
+            self.u_value_calculated = None
+            self.save(update_fields=["u_value_calculated"])
             return None
 
-        total_R = sum([layer.R_value for layer in layers])
-        if total_R > 0:
-            self.u_value_calculated = 1 / total_R
-        else:
-            self.u_value_calculated = None
+        sum_R_layers = 0.0
+        for layer in layers:
+            if layer.R_value is not None and layer.R_value > 0:
+                sum_R_layers += float(layer.R_value)
 
-        self.save()
+        total_R = sum_R_layers + float(R_fixed)
+        self.u_value_calculated = (1 / total_R) if total_R > 0 else None
+        self.save(update_fields=["u_value_calculated"])
         return self.u_value_calculated
 
     def __str__(self):
@@ -238,17 +298,10 @@ class EnvelopeElement(models.Model):
 
 
 class Layer(models.Model):
-    """
-    Eine einzelne Schicht eines Bauteils
-    Arten:
-        - inside : innere Schicht (nur R)
-        - layer  : normale Schicht (d & lambda → R)
-        - outside: äußere Schicht (nur R)
-    """
     TYPE_CHOICES = [
-        ("inside", "Innen"),
-        ("layer", "Materialschicht"),
-        ("outside", "Außen"),
+        ("inside", "Innen (R manuell)"),
+        ("layer", "Materialschicht (d & λ)"),
+        ("outside", "Außen (R manuell)"),
     ]
 
     element = models.ForeignKey(
@@ -256,23 +309,48 @@ class Layer(models.Model):
         on_delete=models.CASCADE,
         related_name="layers"
     )
-    layer_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+
+    layer_type = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES
+    )
+
     name = models.CharField(max_length=200)
-    thickness = models.FloatField(null=True, blank=True, help_text="d in m")
-    lambda_value = models.FloatField(null=True, blank=True, help_text="λ in W/mK")
-    R_value = models.FloatField(null=True, blank=True, help_text="Widerstand R")
+
+    thickness = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="d in m (z.B. 0.24 für 24 cm)"
+    )
+
+    lambda_value = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="λ in W/mK"
+    )
+
+    R_value = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Widerstand R in m²K/W"
+    )
 
     def save(self, *args, **kwargs):
-        # R = d / λ nur für normale Schichten
+        # Automatische Berechnung nur für Materialschichten
         if self.layer_type == "layer":
-            if self.thickness and self.lambda_value:
-                self.R_value = self.thickness / self.lambda_value
+            if (
+                self.thickness is not None
+                and self.lambda_value is not None
+                and self.lambda_value > 0
+            ):
+                self.R_value = float(self.thickness) / float(self.lambda_value)
 
-        # innere/äußere Schichten: R wird extern eingegeben
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.layer_type})"
+
+
 
 # ============================
 # GROUP 3: Internal Gains

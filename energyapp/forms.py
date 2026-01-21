@@ -1,6 +1,7 @@
 from .models import Building, SummerProtection, Sheet01EnergyResult, EnergyResultSheet01
 from django import forms
 
+
 class SimpleBuildingForm(forms.ModelForm):
     class Meta:
         model = Building
@@ -211,5 +212,241 @@ class GwpCompensationForm(forms.ModelForm):
             "factor_gas",
             "factor_electricity",
         ]
+from django import forms
+from django.forms import inlineformset_factory
+
+from .models import (
+    Building,
+    SummerProtection,
+    Sheet01EnergyResult,
+    EnergyResultSheet01,
+    GwpManufacturing,
+    GwpCompensation,
+    EnvelopeElement,
+    Layer,
+)
+
+
+# =========================
+# BUILDING FORMS
+# =========================
+class SimpleBuildingForm(forms.ModelForm):
+    class Meta:
+        model = Building
+        fields = [
+            "name",
+            "length_ns",
+            "width_ow",
+            "storeys",
+            "room_height",
+            "u_wall",
+            "u_roof",
+            "u_floor",
+            "u_window",
+            "air_change_rate",
+            "degree_days",
+            "setpoint_temp",
+            "pv_roof_share",
+            "pv_specific_yield",
+            "pv_self_consumption_share",
+        ]
+
+
+class BuildingForm(forms.ModelForm):
+    class Meta:
+        model = Building
+        fields = [
+            "name",
+            "length_ns",
+            "width_ow",
+            "storeys",
+            "room_height",
+            "u_wall",
+            "u_roof",
+            "u_floor",
+            "u_window",
+            "window_share_n",
+            "window_share_e",
+            "window_share_s",
+            "window_share_w",
+            "g_n",
+            "g_e",
+            "g_s",
+            "g_w",
+            "person_density",
+            "persons",
+            "air_change_rate",
+            "degree_days",
+            "setpoint_temp",
+            "pv_roof_share",
+            "pv_specific_yield",
+            "pv_self_consumption_share",
+        ]
+
+
+# =========================
+# SHEET 01 FORMS
+# =========================
+class Sheet01EnergyResultForm(forms.ModelForm):
+    class Meta:
+        model = Sheet01EnergyResult
+        fields = [
+            "project",
+            "location",
+            "factor_transfer_hw",
+            "factor_distribution_hw",
+            "factor_storage_hw",
+            "factor_solar_generation",
+            "share_wp",
+            "share_fw",
+            "share_gas",
+            "factor_fw_heat",
+            "factor_gas_heat",
+            "factor_aux_heat",
+            "pe_factor_fw",
+            "pe_factor_gas",
+            "pe_factor_on_site",
+            "pe_factor_off_site",
+            "pv_self_use_share",
+        ]
+
+
+class EnergyResultSheet01Form(forms.ModelForm):
+    class Meta:
+        model = EnergyResultSheet01
+        fields = [
+            "project",
+            "location",
+            "E39_transfer_heat_water",
+            "E40_distribution_heat_water",
+            "E41_storage_heat_water",
+            "E42_solar_generation_factor",
+            "E47_factor_fw",
+            "E48_factor_gas",
+            "E49_aux_heating",
+            "E51_air_support",
+            "E52_lighting",
+            "E53_user_process",
+            "I78_pv_self_share",
+        ]
+
+
+# =========================
+# SUMMER PROTECTION FORMS
+# =========================
+class SummerProtectionForm(forms.ModelForm):
+    class Meta:
+        model = SummerProtection
+        fields = [
+            "name",
+            "building",
+            "orientation",
+            "ngf_m2",
+            "window_area_m2",
+            "glazing_category",
+            "shading_type",
+            "climate_region",
+            "night_ventilation",
+            "passive_cooling",
+        ]
+
+
+class SummerStep1Form(forms.ModelForm):
+    class Meta:
+        model = SummerProtection
+        fields = [
+            "building",
+            "orientation",
+            "ngf_m2",
+            "window_area_m2",
+        ]
+
+
+class SummerStep2Form(forms.ModelForm):
+    class Meta:
+        model = SummerProtection
+        fields = [
+            "building",
+            "orientation",
+            "ngf_m2",
+            "window_area_m2",
+            "glazing_category",
+            "shading_type",
+            "climate_region",
+            "night_ventilation",
+            "passive_cooling",
+        ]
+
+
+# =========================
+# GWP FORMS
+# =========================
+class GwpManufacturingForm(forms.ModelForm):
+    class Meta:
+        model = GwpManufacturing
+        fields = [
+            "kg300_new",
+            "kg400_new",
+            "kg300_existing",
+            "kg400_existing",
+            "service_life_years",
+        ]
+
+
+class GwpCompensationForm(forms.ModelForm):
+    class Meta:
+        model = GwpCompensation
+        fields = [
+            "heat_district_regen_kwh",
+            "heat_district_avg_kwh",
+            "gas_kwh",
+            "electricity_kwh",
+            "factor_heat_regen",
+            "factor_heat_avg",
+            "factor_gas",
+            "factor_electricity",
+        ]
+
+
+# =========================
+# ENVELOPE FORMS (WICHTIG!)
+# =========================
+class EnvelopeElementForm(forms.ModelForm):
+    class Meta:
+        model = EnvelopeElement
+        # ✅ heat_flow NICHT im Form! (wird in der View automatisch gesetzt)
+        fields = ["name", "use_custom_layers", "u_value_external"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "use_custom_layers": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "u_value_external": forms.NumberInput(attrs={"class": "form-control", "step": "0.001"}),
+        }
+
+
+class LayerForm(forms.ModelForm):
+    class Meta:
+        model = Layer
+        # layer_type bleibt im Formset, aber wir rendern es im Template NICHT und setzen es serverseitig
+        fields = ["layer_type", "name", "thickness", "lambda_value", "R_value"]
+        widgets = {
+            "layer_type": forms.Select(attrs={"class": "form-select"}),  # wird im Template versteckt
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "thickness": forms.NumberInput(attrs={"class": "form-control layer-thickness", "step": "0.001"}),
+            "lambda_value": forms.NumberInput(attrs={"class": "form-control layer-lambda", "step": "0.001"}),
+            "R_value": forms.NumberInput(attrs={"class": "form-control layer-r", "step": "0.001"}),
+        }
+
+
+LayerFormSet = inlineformset_factory(
+    EnvelopeElement,
+    Layer,
+    form=LayerForm,
+    extra=1,
+    can_delete=True
+)
+
+
+
+
 
 
